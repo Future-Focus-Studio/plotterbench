@@ -5,6 +5,13 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   root: fileURLToPath(new URL("./web", import.meta.url)),
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Shared types/defaults live at repo-root /shared; the client imports
+      // them as "@shared/...". The server uses relative paths instead.
+      "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
+    },
+  },
   server: {
     port: 49173,
     strictPort: true,

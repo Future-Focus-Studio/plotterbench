@@ -1,43 +1,8 @@
-export interface PortInfo {
-  path: string;
-  manufacturer?: string;
-  serialNumber?: string;
-  vendorId?: string;
-  productId?: string;
-  likelyPlotter?: boolean;
-}
-
-export interface PlotOptions {
-  pageWidthMm: number;
-  pageHeightMm: number;
-  offsetXMm: number;
-  offsetYMm: number;
-  svgUnitsToMm: number;
-  drawSpeedMmPerSec: number;
-  travelSpeedMmPerSec: number;
-  penUpDelayMs: number;
-  penDownDelayMs: number;
-  maxSegmentMm: number;
-  penUpZ?: number;
-  penDownZ?: number;
-  penSpeedMmPerMin?: number;
-  flipX?: boolean;
-  flipY?: boolean;
-  swapXY?: boolean;
-  optimizePaths?: boolean;
-  reversePaths?: boolean;
-  startPolylineIndex?: number;
-}
-
-export interface OptimizeStats {
-  originalCount: number;
-  optimizedCount: number;
-  reversed: number;
-  merged: number;
-  originalTravel: number;
-  optimizedTravel: number;
-  drawDistance: number;
-}
+// Types and defaults that cross the server/client boundary live in
+// shared/types.ts. Re-export the ones the client uses so existing imports
+// (App.tsx, etc.) can keep importing them from "./api.js".
+import type { OptimizeStats, PlotOptions, PortInfo, WsEvent } from "@shared/types.js";
+export type { OptimizeStats, PlotOptions, PortInfo, WsEvent };
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(path, {
@@ -84,24 +49,6 @@ export const api = {
       body: JSON.stringify({ svg, options }),
     }),
 };
-
-export type WsEvent =
-  | { type: "hello"; connected: boolean; path?: string | null; version?: string | null }
-  | { type: "connection"; connected: boolean; path?: string; version?: string }
-  | {
-      type: "progress";
-      phase: "preparing" | "drawing" | "paused" | "done" | "error" | "cancelled";
-      polylineIndex: number;
-      polylineCount: number;
-      segmentIndex: number;
-      segmentCount: number;
-      message?: string;
-    }
-  | {
-      type: "plot-start";
-      polylines: { x: number; y: number }[][];
-      startIndex: number;
-    };
 
 export function openWs(onMessage: (e: WsEvent) => void): () => void {
   // In dev, talk directly to the API server on :49787 instead of going through

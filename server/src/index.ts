@@ -311,7 +311,10 @@ app.get("/api/status", (_req, res) => {
 
 if (IS_PROD) {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const webDist = path.resolve(here, "../../dist/web");
+  // In prod this file is built to server/dist/server/src/index.js (the nested
+  // layout comes from rootDir being the repo root — see server/tsconfig.json),
+  // so the web bundle at repo-root dist/web is four levels up.
+  const webDist = path.resolve(here, "../../../../dist/web");
   app.use(express.static(webDist));
   app.get("*", (_req, res) => res.sendFile(path.join(webDist, "index.html")));
 }

@@ -1,16 +1,8 @@
 import { Point, Polyline } from "./svg.js";
+import { OptimizeStats } from "../../shared/types.js";
 
-export interface OptimizeStats {
-  originalCount: number;
-  optimizedCount: number;
-  reversed: number;
-  merged: number;
-  /** Pen-up travel distance (sum of gaps between polylines). */
-  originalTravel: number;
-  optimizedTravel: number;
-  /** Total draw distance (unchanged by optimization). */
-  drawDistance: number;
-}
+// `OptimizeStats` is defined once in shared/types.ts; re-export for importers.
+export type { OptimizeStats };
 
 function dist(a: Point, b: Point): number {
   const dx = a.x - b.x, dy = a.y - b.y;

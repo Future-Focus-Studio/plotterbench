@@ -4,6 +4,7 @@ import NumberInput from "./NumberInput.js";
 import PageCanvas from "./PageCanvas.js";
 import SvgTree, { applyLayerColors, buildSvgTree, filterSvgByHidden, SvgTreeNode } from "./SvgTree.js";
 import { api, openWs, OptimizeStats, PlotOptions, PortInfo, WsEvent } from "./api.js";
+import { DEFAULT_PLOT_OPTIONS } from "@shared/types.js";
 
 type ConnectionState = {
   connected: boolean;
@@ -650,7 +651,10 @@ export default function App() {
   }, [visibleSvg]);
 
   const plotOptions: PlotOptions = useMemo(
+    // Start from the shared defaults so the client and server agree on every
+    // field, then override only the ones the user controls in the UI.
     () => ({
+      ...DEFAULT_PLOT_OPTIONS,
       pageWidthMm: pageW,
       pageHeightMm: pageH,
       offsetXMm: displayOffsetX,
@@ -663,7 +667,6 @@ export default function App() {
       penUpZ,
       penDownZ,
       penSpeedMmPerMin,
-      maxSegmentMm: 1.5,
       flipX,
       flipY,
       swapXY,

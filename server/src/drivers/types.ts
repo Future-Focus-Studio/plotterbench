@@ -6,15 +6,10 @@
 // means writing a new class that implements `PlotterDriver` and registering it
 // in registry.ts. No changes to the engine are required.
 
-export interface PortInfo {
-  path: string;
-  manufacturer?: string;
-  serialNumber?: string;
-  productId?: string;
-  vendorId?: string;
-  /** True if some registered driver recognizes this port by VID/PID. */
-  likelyPlotter?: boolean;
-}
+// `PortInfo` is defined once in shared/types.ts (it crosses the server/client
+// boundary). Re-export it so driver modules can keep importing from "./types.js".
+import { PortInfo } from "../../../shared/types.js";
+export type { PortInfo };
 
 export interface SendOptions {
   timeoutMs?: number;

@@ -1,66 +1,12 @@
 import { PlotterDriver } from "./drivers/types.js";
 import { FlattenResult, Point, Polyline } from "./svg.js";
 import { optimizePolylines, OptimizeStats } from "./optimize.js";
+import { DEFAULT_PLOT_OPTIONS, PlotOptions } from "../../shared/types.js";
 
-// ---------- Plot options ----------
-export interface PlotOptions {
-  pageWidthMm: number;
-  pageHeightMm: number;
-  offsetXMm: number;
-  offsetYMm: number;
-  /** Scale from SVG user units to mm. */
-  svgUnitsToMm: number;
-  /** Pen-down drawing speed in mm/s. Converted to mm/min for G-code feed. */
-  drawSpeedMmPerSec: number;
-  /** Pen-up travel speed in mm/s. */
-  travelSpeedMmPerSec: number;
-  /** Delay after raising pen (ms). */
-  penUpDelayMs: number;
-  /** Delay after lowering pen (ms). */
-  penDownDelayMs: number;
-  /** Max segment length in mm. */
-  maxSegmentMm: number;
-  /** Pen "up" Z position (firmware units, 0–10). Smaller = more raised. */
-  penUpZ: number;
-  /** Pen "down" Z position. Larger = more pressure. */
-  penDownZ: number;
-  /** Feed rate (mm/min) used when raising/lowering the pen. */
-  penSpeedMmPerMin: number;
-  /** Invert X axis (toggle if +X in software moves pen LEFT on your plotter). */
-  flipX: boolean;
-  /** Invert Y axis (toggle if +Y moves pen UP on your plotter — fixes upside-down plots). */
-  flipY: boolean;
-  /** Swap X and Y (toggle if axes are rotated 90° in hardware). */
-  swapXY: boolean;
-  /** Reorder / reverse / merge polylines before plotting to cut pen-up travel. */
-  optimizePaths: boolean;
-  /** Play the entire plot back-to-front: reverse polyline order AND each polyline's direction. */
-  reversePaths: boolean;
-  /** Skip polylines before this index — used to "rewind" and resume mid-plot. */
-  startPolylineIndex: number;
-}
-
-export const DEFAULT_PLOT_OPTIONS: PlotOptions = {
-  pageWidthMm: 210,
-  pageHeightMm: 297,
-  offsetXMm: 0,
-  offsetYMm: 0,
-  svgUnitsToMm: 1,
-  drawSpeedMmPerSec: 40,
-  travelSpeedMmPerSec: 80,
-  penUpDelayMs: 200,
-  penDownDelayMs: 200,
-  maxSegmentMm: 1.5,
-  penUpZ: 0,
-  penDownZ: 5,
-  penSpeedMmPerMin: 4000,
-  flipX: false,
-  flipY: false,
-  swapXY: false,
-  optimizePaths: false,
-  reversePaths: false,
-  startPolylineIndex: 0,
-};
+// `PlotOptions` and `DEFAULT_PLOT_OPTIONS` are defined once in shared/types.ts.
+// Re-export them so existing importers (index.ts, etc.) keep working.
+export { DEFAULT_PLOT_OPTIONS };
+export type { PlotOptions };
 
 function toMachineCoords(xMm: number, yMm: number, opts: PlotOptions): [number, number] {
   let x = opts.flipX ? -xMm : xMm;

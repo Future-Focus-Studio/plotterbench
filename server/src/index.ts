@@ -1,20 +1,22 @@
-import express from "express";
+import express, { Response } from "express";
 import cors from "cors";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
 import { PlotterDriver, PortInfo } from "./drivers/types.js";
 import { detectDriver, listPorts, DEFAULT_DRIVER } from "./drivers/registry.js";
 import { flattenSvg } from "./svg.js";
 import { optimizePolylines } from "./optimize.js";
+import { planPolylines, Plotter, PlotProgress } from "./plotter.js";
 import {
-  DEFAULT_PLOT_OPTIONS,
-  planPolylines,
-  Plotter,
-  PlotOptions,
-  PlotProgress,
-} from "./plotter.js";
+  ConnectSchema,
+  parsePlotOptions,
+  PenSchema,
+  PlotOptionsBodySchema,
+  SvgFieldSchema,
+} from "../../shared/schema.js";
 
 const PORT = parseInt(process.env.PORT || "49787", 10);
 const IS_PROD = process.env.NODE_ENV === "production";
@@ -70,8 +72,20 @@ function broadcast(msg: unknown) {
   }
 }
 
-function parsePlotOptions(body: Partial<PlotOptions>): PlotOptions {
-  return { ...DEFAULT_PLOT_OPTIONS, ...body };
+/**
+ * Validate `data` against `schema`. On success returns the parsed value; on
+ * failure sends a 400 with a readable message and returns undefined — callers
+ * must `return` immediately when they get undefined (the response is sent).
+ */
+function parseOrReject<T>(res: Response, schema: z.ZodType<T>, data: unknown): T | undefined {
+  const result = schema.safeParse(data);
+  if (result.success) return result.data;
+  res.status(400).json({
+    error: result.error.issues
+      .map((i) => (i.path.length ? `${i.path.join(".")}: ${i.message}` : i.message))
+      .join("; "),
+  });
+  return undefined;
 }
 
 // ---------- Routes ----------
@@ -85,8 +99,9 @@ app.get("/api/ports", async (_req, res) => {
 });
 
 app.post("/api/connect", async (req, res) => {
-  const { path: portPath } = req.body as { path?: string };
-  if (!portPath) return res.status(400).json({ error: "missing path" });
+  const body = parseOrReject(res, ConnectSchema, req.body);
+  if (!body) return;
+  const portPath = body.path;
   try {
     autoConnectPaused = false;
     // Pick the driver for this port (by VID/PID) before opening.
@@ -128,12 +143,14 @@ app.post("/api/disconnect", async (_req, res) => {
 });
 
 app.post("/api/pen", async (req, res) => {
-  const { state, options } = req.body as { state?: "up" | "down"; options?: Partial<PlotOptions> };
-  const opts = parsePlotOptions(options || {});
+  const body = parseOrReject(res, PenSchema, req.body);
+  if (!body) return;
+  const opts = parseOrReject(res, PlotOptionsBodySchema, (req.body as { options?: unknown }).options);
+  if (!opts) return;
   try {
-    if (state === "down") await plotter.penDown(opts);
+    if (body.state === "down") await plotter.penDown(opts);
     else await plotter.penUp(opts);
-    res.json({ ok: true, state });
+    res.json({ ok: true, state: body.state });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -169,8 +186,8 @@ app.post("/api/set-origin", async (_req, res) => {
 });
 
 app.post("/api/optimize", async (req, res) => {
-  const { svg } = req.body as { svg?: string };
-  if (!svg) return res.status(400).json({ error: "missing svg" });
+  const svg = parseOrReject(res, SvgFieldSchema, req.body?.svg);
+  if (svg === undefined) return;
   try {
     // Looser sampling — optimize stats only need the polyline topology, not
     // pen-quality density.
@@ -183,9 +200,10 @@ app.post("/api/optimize", async (req, res) => {
 });
 
 app.post("/api/plan", async (req, res) => {
-  const { svg, options } = req.body as { svg?: string; options?: Partial<PlotOptions> };
-  if (!svg) return res.status(400).json({ error: "missing svg" });
-  const opts = parsePlotOptions(options || {});
+  const svg = parseOrReject(res, SvgFieldSchema, req.body?.svg);
+  if (svg === undefined) return;
+  const opts = parseOrReject(res, PlotOptionsBodySchema, req.body?.options);
+  if (!opts) return;
   try {
     const flat = await flattenSvg(svg, { mmPerUnit: opts.svgUnitsToMm });
     const polylines = planPolylines(flat, opts);
@@ -196,8 +214,8 @@ app.post("/api/plan", async (req, res) => {
 });
 
 app.post("/api/preview", async (req, res) => {
-  const { svg } = req.body as { svg?: string };
-  if (!svg) return res.status(400).json({ error: "missing svg" });
+  const svg = parseOrReject(res, SvgFieldSchema, req.body?.svg);
+  if (svg === undefined) return;
   try {
     // Preview is for the screen, not the plotter — coarser sampling keeps
     // the websocket payload small for huge SVGs.
@@ -213,13 +231,18 @@ app.post("/api/preview", async (req, res) => {
 });
 
 app.post("/api/plot", async (req, res) => {
-  const { svg, options } = req.body as { svg?: string; options?: Partial<PlotOptions> };
   console.log(
-    `[plot] request: svgBytes=${svg?.length ?? 0} connected=${driver.isOpen()} plotting=${plotter.isRunning()}`
+    `[plot] request: svgBytes=${req.body?.svg?.length ?? 0} connected=${driver.isOpen()} plotting=${plotter.isRunning()}`
   );
-  if (!svg) {
-    console.log(`[plot] rejected: missing svg`);
-    return res.status(400).json({ error: "missing svg" });
+  const svg = parseOrReject(res, SvgFieldSchema, req.body?.svg);
+  if (svg === undefined) {
+    console.log(`[plot] rejected: invalid svg`);
+    return;
+  }
+  const opts = parseOrReject(res, PlotOptionsBodySchema, req.body?.options);
+  if (!opts) {
+    console.log(`[plot] rejected: invalid options`);
+    return;
   }
   if (!driver.isOpen()) {
     console.log(`[plot] rejected: not connected`);
@@ -230,7 +253,6 @@ app.post("/api/plot", async (req, res) => {
     return res.status(409).json({ error: "already plotting" });
   }
 
-  const opts = parsePlotOptions(options || {});
   try {
     const flat = await flattenSvg(svg, { mmPerUnit: opts.svgUnitsToMm });
     console.log(

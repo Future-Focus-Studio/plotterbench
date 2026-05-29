@@ -17,7 +17,17 @@ html, body { height: 100%; overflow: hidden; }
   padding: 16px 16px 0 16px;
 }
 .sidebar-right > h2:first-child { margin-top: 0; }
-.stage { padding: 0; display: flex; overflow: hidden; }
+.stage {
+  padding: 0;
+  display: flex;
+  overflow: hidden;
+  background-color: #161616;
+  /* Subtle dot grid: faint dots on the dark field, kept darker than the
+     #222 sidebars so the stage still reads as the recessed area. */
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-position: center;
+}
 .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 18px 0 8px; }
@@ -111,7 +121,7 @@ button + button { margin-left: 6px; }
 .tree-color-swatch.is-active { border-color: #888; }
 .tree-color-swatch:hover { border-color: #eee; }
 
-.page-wrap { background: #0e0e0e; padding: 24px; border-radius: 6px; }
+.page-wrap { background: transparent; padding: 0; }
 .page-svg { background: white; display: block; box-shadow: 0 2px 18px rgba(0,0,0,0.5); }
 .page-svg .content-group { cursor: grab; }
 .page-svg .content-group.dragging { cursor: grabbing; }

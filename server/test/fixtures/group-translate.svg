@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- A line nested two groups deep; the transforms compose to a net
+       translate of (15, 25). Used to verify parent-transform accumulation. -->
+  <g transform="translate(10, 20)">
+    <g transform="translate(5, 5)">
+      <line x1="0" y1="0" x2="50" y2="0" />
+    </g>
+  </g>
+</svg>

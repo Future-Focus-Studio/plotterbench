@@ -8,7 +8,9 @@ import { DEFAULT_PLOT_OPTIONS, PlotOptions } from "../../shared/types.js";
 export { DEFAULT_PLOT_OPTIONS };
 export type { PlotOptions };
 
-function toMachineCoords(xMm: number, yMm: number, opts: PlotOptions): [number, number] {
+// The pure geometry helpers below (toMachineCoords, transformPolylines,
+// clampToPage, subdivide) are exported for unit testing (plotter.test.ts).
+export function toMachineCoords(xMm: number, yMm: number, opts: PlotOptions): [number, number] {
   let x = opts.flipX ? -xMm : xMm;
   let y = opts.flipY ? -yMm : yMm;
   if (opts.swapXY) [x, y] = [y, x];
@@ -27,14 +29,14 @@ export interface PlotProgress {
 type ProgressCb = (p: PlotProgress) => void;
 type StartCb = (polylines: Polyline[], startIndex: number) => void;
 
-function transformPolylines(polylines: Polyline[], opts: PlotOptions): Polyline[] {
+export function transformPolylines(polylines: Polyline[], opts: PlotOptions): Polyline[] {
   const s = opts.svgUnitsToMm;
   const dx = opts.offsetXMm;
   const dy = opts.offsetYMm;
   return polylines.map((pl) => pl.map((p) => ({ x: p.x * s + dx, y: p.y * s + dy })));
 }
 
-function clampToPage(p: Point, opts: PlotOptions): Point {
+export function clampToPage(p: Point, opts: PlotOptions): Point {
   return {
     x: Math.max(0, Math.min(opts.pageWidthMm, p.x)),
     y: Math.max(0, Math.min(opts.pageHeightMm, p.y)),
@@ -54,7 +56,7 @@ export function planPolylines(flat: FlattenResult, opts: PlotOptions): Polyline[
   return polylines.map((pl) => pl.map((p) => clampToPage(p, opts)));
 }
 
-function subdivide(a: Point, b: Point, maxLen: number): Point[] {
+export function subdivide(a: Point, b: Point, maxLen: number): Point[] {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const d = Math.hypot(dx, dy);

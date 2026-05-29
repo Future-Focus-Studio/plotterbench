@@ -5,10 +5,12 @@ export type Point = { x: number; y: number };
 export type Polyline = Point[];
 
 // Affine matrix [a, b, c, d, e, f] → (x', y') = (a*x + c*y + e, b*x + d*y + f)
-type Matrix = [number, number, number, number, number, number];
-const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+// The matrix helpers below are exported for unit testing (svg-matrix.test.ts);
+// they are pure and have no other external consumers.
+export type Matrix = [number, number, number, number, number, number];
+export const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 
-function multiply(m1: Matrix, m2: Matrix): Matrix {
+export function multiply(m1: Matrix, m2: Matrix): Matrix {
   const [a1, b1, c1, d1, e1, f1] = m1;
   const [a2, b2, c2, d2, e2, f2] = m2;
   return [
@@ -21,12 +23,12 @@ function multiply(m1: Matrix, m2: Matrix): Matrix {
   ];
 }
 
-function apply(m: Matrix, p: Point): Point {
+export function apply(m: Matrix, p: Point): Point {
   const [a, b, c, d, e, f] = m;
   return { x: a * p.x + c * p.y + e, y: b * p.x + d * p.y + f };
 }
 
-function parseTransform(str: string | undefined): Matrix {
+export function parseTransform(str: string | undefined): Matrix {
   if (!str) return IDENTITY;
   let m: Matrix = IDENTITY;
   const re = /(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g;

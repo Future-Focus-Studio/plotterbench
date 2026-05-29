@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- The shape inside <defs> is a template and must NOT be plotted; only the
+       visible polyline should survive flattening. -->
+  <defs>
+    <rect id="tmpl" x="0" y="0" width="100" height="100" />
+  </defs>
+  <polyline points="0,0 10,0 10,10" />
+</svg>

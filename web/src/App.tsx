@@ -1093,28 +1093,6 @@ export default function App() {
           </label>
         </div>
 
-        <h2>Controls</h2>
-        <div className="row">
-          <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
-          <button className="secondary" onClick={penDown} disabled={!conn.connected}>Pen down</button>
-        </div>
-        <div className="row">
-          <button className="secondary" onClick={home} disabled={!conn.connected}>Go to 0,0</button>
-          <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
-        </div>
-        <div className="row">
-          <button
-            className="secondary"
-            onClick={async () => {
-              try { await api.setOrigin(); setStatus({ msg: "Origin set at current position", kind: "ok" }); }
-              catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); }
-            }}
-            disabled={!conn.connected}
-          >
-            Set origin here
-          </button>
-        </div>
-
       </aside>
 
       <main className="stage">
@@ -1148,6 +1126,28 @@ export default function App() {
       </main>
 
       <aside className="sidebar sidebar-right">
+        <h2>Controls</h2>
+        <div className="row">
+          <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
+          <button className="secondary" onClick={penDown} disabled={!conn.connected}>Pen down</button>
+        </div>
+        <div className="row">
+          <button className="secondary" onClick={home} disabled={!conn.connected}>Go to 0,0</button>
+          <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
+        </div>
+        <div className="row">
+          <button
+            className="secondary"
+            onClick={async () => {
+              try { await api.setOrigin(); setStatus({ msg: "Origin set at current position", kind: "ok" }); }
+              catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); }
+            }}
+            disabled={!conn.connected}
+          >
+            Set origin here
+          </button>
+        </div>
+
         <h2>Plot</h2>
         <div className="row">
           {!plotting && !paused ? (

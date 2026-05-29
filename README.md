@@ -15,10 +15,20 @@ A local web interface for plotting SVGs on a plotter. Drop an SVG, set page size
 
 Everything lives in **one npm package** at the repo root. Source is split by area:
 
-- `server/` — Node/TypeScript backend. Serial I/O (`device.ts`), SVG flattening (`svg.ts`), path optimization (`optimize.ts`), plot engine (`plotter.ts`), HTTP/WS server (`index.ts`).
+- `server/` — Node/TypeScript backend. Plotter drivers (`drivers/`), SVG flattening (`svg.ts`), path optimization (`optimize.ts`), plot engine (`plotter.ts`), HTTP/WS server (`index.ts`).
 - `web/` — Vite + React frontend.
 
-The server speaks the **DrawCore** protocol — a Grbl-derived G-code + `$`-command interface. It auto-detects DrawCore plotters by USB VID/PID (`1A86:7523` or `1A86:8040`) and confirms the firmware identifies itself as `DrawCore` on connect.
+The plot engine talks to plotters through a `PlotterDriver` interface, never to a concrete protocol. The bundled driver speaks the **DrawCore** protocol — a Grbl-derived G-code + `$`-command interface — and is auto-detected by USB VID/PID (`1A86:7523` or `1A86:8040`), confirming the firmware identifies itself as `DrawCore` on connect.
+
+### Adding a plotter driver
+
+Support for a new plotter (AxiDraw/EBB, NextDraw, generic GRBL, EggBot, …) is an additive change — the plot engine and HTTP layer don't change:
+
+1. Add `server/src/drivers/<name>.ts` with a class that implements `PlotterDriver` (`drivers/types.ts`). For a line-oriented serial protocol, extend `SerialTransport` (`drivers/transport.ts`) to reuse the command queue, and override the reply-classification hooks (`isOk` / `parseError` / `expectsOk`) if the firmware isn't GRBL-style. `drivers/drawcore.ts` is the reference implementation.
+2. Give the class a static `id`, `displayName`, and `matches(port)` (USB VID/PID detection).
+3. Register it in `server/src/drivers/registry.ts` by adding it to `DRIVERS`.
+
+On connect (and during auto-connect), the server picks the driver whose `matches()` recognizes the selected port and binds the engine to it.
 
 ## Prerequisites
 

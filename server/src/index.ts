@@ -4,7 +4,8 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
-import { PlotterDevice } from "./device.js";
+import { PlotterDriver, PortInfo } from "./drivers/types.js";
+import { detectDriver, listPorts, DEFAULT_DRIVER } from "./drivers/registry.js";
 import { flattenSvg } from "./svg.js";
 import { optimizePolylines } from "./optimize.js";
 import {
@@ -22,11 +23,30 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
 
-const device = new PlotterDevice();
-const plotter = new Plotter(device);
+// The active driver and the engine bound to it. Both are reassigned by
+// `ensureDriverFor` when a port resolves to a different driver class. Routes
+// reference these module variables at call time, so they always see the
+// current instances.
+let driver: PlotterDriver = new DEFAULT_DRIVER();
+let activeDriverId: string = DEFAULT_DRIVER.id;
+let plotter = new Plotter(driver);
 
 let currentPath: string | null = null;
 let currentVersion: string | null = null;
+
+/**
+ * Make `driver`/`plotter` use the driver class that matches `port` (falling
+ * back to the default driver). If that differs from the current driver, the
+ * old one is closed and a fresh engine is bound to the new driver.
+ */
+async function ensureDriverFor(port: PortInfo): Promise<void> {
+  const DriverClass = detectDriver(port) ?? DEFAULT_DRIVER;
+  if (DriverClass.id === activeDriverId) return;
+  if (driver.isOpen()) await driver.close().catch(() => {});
+  driver = new DriverClass();
+  activeDriverId = DriverClass.id;
+  plotter = new Plotter(driver);
+}
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/ws" });
@@ -36,7 +56,7 @@ wss.on("connection", (ws) => {
   ws.send(
     JSON.stringify({
       type: "hello",
-      connected: device.isOpen(),
+      connected: driver.isOpen(),
       path: currentPath,
       version: currentVersion,
     })
@@ -57,8 +77,8 @@ function parsePlotOptions(body: Partial<PlotOptions>): PlotOptions {
 // ---------- Routes ----------
 app.get("/api/ports", async (_req, res) => {
   try {
-    const ports = await device.listPorts();
-    res.json({ ports, connected: device.isOpen() });
+    const ports = await listPorts();
+    res.json({ ports, connected: driver.isOpen() });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -69,18 +89,21 @@ app.post("/api/connect", async (req, res) => {
   if (!portPath) return res.status(400).json({ error: "missing path" });
   try {
     autoConnectPaused = false;
-    await device.open(portPath);
+    // Pick the driver for this port (by VID/PID) before opening.
+    const ports = await listPorts();
+    await ensureDriverFor(ports.find((p) => p.path === portPath) ?? { path: portPath });
+    await driver.open(portPath);
     let version: string;
     try {
-      version = await device.handshake();
+      version = await driver.handshake();
     } catch (verr) {
-      await device.close().catch(() => {});
+      await driver.close().catch(() => {});
       return res.status(502).json({
-        error: `Connected to ${portPath} but firmware did not identify as DrawCore. ${(verr as Error).message}`,
+        error: `Connected to ${portPath} but firmware did not identify as a supported plotter. ${(verr as Error).message}`,
       });
     }
     // Start in absolute mode and treat current physical pen position as origin.
-    await device.setAbsoluteMode().catch(() => {});
+    await driver.setAbsoluteMode().catch(() => {});
     await plotter.zeroHere().catch(() => {});
     currentPath = portPath;
     currentVersion = version;
@@ -93,7 +116,7 @@ app.post("/api/connect", async (req, res) => {
 
 app.post("/api/disconnect", async (_req, res) => {
   try {
-    await device.close();
+    await driver.close();
     currentPath = null;
     currentVersion = null;
     autoConnectPaused = true;
@@ -192,13 +215,13 @@ app.post("/api/preview", async (req, res) => {
 app.post("/api/plot", async (req, res) => {
   const { svg, options } = req.body as { svg?: string; options?: Partial<PlotOptions> };
   console.log(
-    `[plot] request: svgBytes=${svg?.length ?? 0} connected=${device.isOpen()} plotting=${plotter.isRunning()}`
+    `[plot] request: svgBytes=${svg?.length ?? 0} connected=${driver.isOpen()} plotting=${plotter.isRunning()}`
   );
   if (!svg) {
     console.log(`[plot] rejected: missing svg`);
     return res.status(400).json({ error: "missing svg" });
   }
-  if (!device.isOpen()) {
+  if (!driver.isOpen()) {
     console.log(`[plot] rejected: not connected`);
     return res.status(400).json({ error: "not connected" });
   }
@@ -237,8 +260,8 @@ app.post("/api/plot", async (req, res) => {
 // you can prove the motion path works without involving the UI. Run with:
 //   curl -X POST http://localhost:49787/api/plot-test
 app.post("/api/plot-test", async (_req, res) => {
-  console.log(`[plot-test] connected=${device.isOpen()} plotting=${plotter.isRunning()}`);
-  if (!device.isOpen()) return res.status(400).json({ error: "not connected" });
+  console.log(`[plot-test] connected=${driver.isOpen()} plotting=${plotter.isRunning()}`);
+  if (!driver.isOpen()) return res.status(400).json({ error: "not connected" });
   if (plotter.isRunning()) return res.status(409).json({ error: "already plotting" });
   const opts = parsePlotOptions({});
   const size = 20;
@@ -283,7 +306,7 @@ app.post("/api/resume", (_req, res) => {
 });
 
 app.get("/api/status", (_req, res) => {
-  res.json({ connected: device.isOpen(), plotting: plotter.isRunning() });
+  res.json({ connected: driver.isOpen(), plotting: plotter.isRunning() });
 });
 
 if (IS_PROD) {
@@ -294,7 +317,7 @@ if (IS_PROD) {
 }
 
 // ---------- Auto-connect ----------
-// Periodically scan for a DrawCore plotter and connect if we're not already
+// Periodically scan for a recognized plotter and connect if we're not already
 // connected. Lets the server come up before the plotter is plugged in / powered
 // on, and recovers automatically when the USB cable is reseated.
 let autoConnectBusy = false;
@@ -304,7 +327,7 @@ async function tryAutoConnect() {
   if (autoConnectBusy || autoConnectPaused) return;
   autoConnectBusy = true;
   try {
-    if (device.isOpen()) return;
+    if (driver.isOpen()) return;
     // Device is closed — make sure cached connection state agrees.
     if (currentPath !== null) {
       currentPath = null;
@@ -313,7 +336,7 @@ async function tryAutoConnect() {
     }
     let ports;
     try {
-      ports = await device.listPorts();
+      ports = await listPorts();
     } catch (err) {
       console.log(`[auto-connect] listPorts failed: ${(err as Error).message}`);
       return;
@@ -321,21 +344,22 @@ async function tryAutoConnect() {
     const candidate = ports.find((p) => p.likelyPlotter);
     if (!candidate) return;
     console.log(`[auto-connect] trying ${candidate.path}`);
+    await ensureDriverFor(candidate);
     try {
-      await device.open(candidate.path);
+      await driver.open(candidate.path);
     } catch (err) {
       console.log(`[auto-connect] open failed: ${(err as Error).message}`);
       return;
     }
     let version: string;
     try {
-      version = await device.handshake();
+      version = await driver.handshake();
     } catch (err) {
       console.log(`[auto-connect] handshake failed: ${(err as Error).message}`);
-      await device.close().catch(() => {});
+      await driver.close().catch(() => {});
       return;
     }
-    await device.setAbsoluteMode().catch(() => {});
+    await driver.setAbsoluteMode().catch(() => {});
     await plotter.zeroHere().catch(() => {});
     currentPath = candidate.path;
     currentVersion = version;

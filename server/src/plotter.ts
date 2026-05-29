@@ -1,4 +1,4 @@
-import { PlotterDevice } from "./device.js";
+import { PlotterDriver } from "./drivers/types.js";
 import { FlattenResult, Point, Polyline } from "./svg.js";
 import { optimizePolylines, OptimizeStats } from "./optimize.js";
 
@@ -132,7 +132,7 @@ export class Plotter {
   private currentYmm = 0;
   private currentFeedMmPerMin: number | null = null;
 
-  constructor(private device: PlotterDevice) {}
+  constructor(private device: PlotterDriver) {}
 
   isRunning() { return this.running; }
   isPaused() { return this.paused; }

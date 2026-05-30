@@ -89,4 +89,21 @@ The DrawCore firmware is Grbl-derived: it runs over a CH340 USB-UART at **115200
 | `G4 P…`            | Dwell for P seconds (pen settle delay)                   |
 | `$H`               | Run limit-switch homing cycle (if configured)            |
 | `$SLP`             | Sleep / release motors                                   |
+
+## Contributing
+
+Forks, issues, and pull requests are welcome. Pull requests require agreeing to
+the [Contributor License Agreement](CLA.md) — see [CONTRIBUTING.md](CONTRIBUTING.md)
+for the workflow and what to know before contributing.
+
+## License
+
+Plotterbench is **source-available, not open source**. It is licensed under the
+[PolyForm Shield License 1.0.0](LICENSE): you may use, modify, fork, and
+contribute to it for free — including for your own commercial work — but you may
+**not** use it to build a product or service that competes with Future Focus
+Studio LLC's offerings (including the paid Plotterbench desktop build).
+
+Copyright © 2026 Future Focus Studio LLC. All rights reserved except as granted
+by the license.
 | `$QP`              | Query pen state                                          |

@@ -251,74 +251,6 @@ function fmtMm(mm: number): string {
   return `${mm.toFixed(1)} mm`;
 }
 
-function fmtTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return "—";
-  const s = Math.round(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${m}m ${sec}s`;
-  if (m > 0) return `${m}m ${sec}s`;
-  return `${sec}s`;
-}
-
-interface TimeEstimateProps {
-  stats: OptimizeStats;
-  /** Conversion factor from SVG user units to mm — server distances arrive in user units. */
-  mmPerUnit: number;
-  /** When true, use post-optimization counts/travel. */
-  useOptimized: boolean;
-  drawSpeed: number;        // mm/s (pen down)
-  travelSpeed: number;      // mm/s (pen up)
-  penUpZ: number;           // mm
-  penDownZ: number;         // mm
-  penSpeedMmPerMin: number; // Z-axis speed
-  penDownDelayMs: number;
-  penUpDelayMs: number;
-}
-
-function TimeEstimate({
-  stats, mmPerUnit, useOptimized,
-  drawSpeed, travelSpeed,
-  penUpZ, penDownZ, penSpeedMmPerMin,
-  penDownDelayMs, penUpDelayMs,
-}: TimeEstimateProps) {
-  const drawMm = stats.drawDistance * mmPerUnit;
-  const travelMm = (useOptimized ? stats.optimizedTravel : stats.originalTravel) * mmPerUnit;
-  const strokes = useOptimized ? stats.optimizedCount : stats.originalCount;
-
-  const drawSec = drawSpeed > 0 ? drawMm / drawSpeed : 0;
-  const travelSec = travelSpeed > 0 ? travelMm / travelSpeed : 0;
-  // Each stroke has one pen-down and one pen-up: two Z moves of |penUpZ - penDownZ|.
-  const zPerStrokeSec = penSpeedMmPerMin > 0
-    ? (2 * Math.abs(penUpZ - penDownZ) * 60) / penSpeedMmPerMin
-    : 0;
-  const delayPerStrokeSec = (penDownDelayMs + penUpDelayMs) / 1000;
-  const overheadSec = strokes * (zPerStrokeSec + delayPerStrokeSec);
-  const total = drawSec + travelSec + overheadSec;
-
-  return (
-    <div className="opt-stats">
-      <div className="opt-row opt-highlight">
-        <span>Total time</span>
-        <span>{fmtTime(total)}</span>
-      </div>
-      <div className="opt-row muted">
-        <span>Draw</span>
-        <span>{fmtTime(drawSec)} · {fmtMm(drawMm)} @ {drawSpeed} mm/s</span>
-      </div>
-      <div className="opt-row muted">
-        <span>Travel</span>
-        <span>{fmtTime(travelSec)} · {fmtMm(travelMm)} @ {travelSpeed} mm/s</span>
-      </div>
-      <div className="opt-row muted">
-        <span>Pen lifts</span>
-        <span>{fmtTime(overheadSec)} · {strokes} stroke{strokes === 1 ? "" : "s"}</span>
-      </div>
-    </div>
-  );
-}
-
 function OptimizeSummary({ stats }: { stats: OptimizeStats }) {
   const {
     originalCount, optimizedCount, reversed, merged,
@@ -631,9 +563,8 @@ export default function App() {
   }, [testPatternOn, testPatternParsed, parsed, hiddenKeys, layerColors]);
 
   // Fetch optimize stats whenever the visible SVG changes. The optimize toggle
-  // only affects which counts/travel we *display*; the underlying analysis is
-  // useful for the time estimate either way. Debounced to avoid spamming the
-  // server on rapid layer toggles.
+  // only affects which counts/travel we *display*. Debounced to avoid spamming
+  // the server on rapid layer toggles.
   useEffect(() => {
     if (!visibleSvg) {
       setOptimizeStats(null);
@@ -981,25 +912,6 @@ export default function App() {
                 {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
                 {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
               </div>
-            )}
-            {optimizeStats && displayParsed && displayParsed.viewBoxWidth > 0 && (
-              <>
-                <h3 className="subhead">Time estimate</h3>
-                <div className="optimize-summary">
-                  <TimeEstimate
-                    stats={optimizeStats}
-                    mmPerUnit={displayWidthMm / displayParsed.viewBoxWidth}
-                    useOptimized={optimizePaths}
-                    drawSpeed={drawSpeed}
-                    travelSpeed={travelSpeed}
-                    penUpZ={penUpZ}
-                    penDownZ={penDownZ}
-                    penSpeedMmPerMin={penSpeedMmPerMin}
-                    penDownDelayMs={penDownDelayMs}
-                    penUpDelayMs={penUpDelayMs}
-                  />
-                </div>
-              </>
             )}
           </>
         )}

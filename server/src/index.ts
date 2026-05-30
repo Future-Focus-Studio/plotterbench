@@ -62,6 +62,12 @@ let plotter = new Plotter(driver);
 
 let currentPath: string | null = null;
 let currentVersion: string | null = null;
+// Whether the coordinate origin has been established for the current session.
+// Set on the first connect (and on explicit "set origin"); cleared only on an
+// explicit disconnect. A transient USB drop must NOT clear it, so a reconnect
+// preserves the origin the user set instead of silently re-zeroing to wherever
+// the pen happens to be sitting.
+let originEstablished = false;
 
 /**
  * Make `driver`/`plotter` use the driver class that matches `port` (falling
@@ -104,6 +110,21 @@ function broadcast(msg: unknown) {
   for (const c of clients) {
     if (c.readyState === WebSocket.OPEN) c.send(str);
   }
+}
+
+/** Surface an out-of-band message in the client's status area. */
+function notify(level: "info" | "warn", message: string) {
+  broadcast({ type: "notice", level, message });
+}
+
+/**
+ * Zero the coordinate origin (G92) at the pen's current position and mark the
+ * origin as established for this session. Used by the explicit "set origin"
+ * action and by the first connect of a session.
+ */
+async function setOriginHere() {
+  await plotter.zeroHere();
+  originEstablished = true;
 }
 
 /**
@@ -151,9 +172,14 @@ app.post("/api/connect", async (req, res) => {
         error: `Connected to ${portPath} but firmware did not identify as a supported plotter. ${(verr as Error).message}`,
       });
     }
-    // Start in absolute mode and treat current physical pen position as origin.
     await driver.setAbsoluteMode().catch(() => {});
-    await plotter.zeroHere().catch(() => {});
+    if (originEstablished) {
+      // Reconnecting within a session — keep the origin the user already has.
+      notify("warn", 'Reconnected; kept the existing origin. Use "Set origin here" to re-zero.');
+    } else {
+      // First connect of the session: treat the current pen position as origin.
+      await setOriginHere().catch(() => {});
+    }
     currentPath = portPath;
     currentVersion = version;
     broadcast({ type: "connection", connected: true, path: portPath, version });
@@ -168,6 +194,8 @@ app.post("/api/disconnect", async (_req, res) => {
     await driver.close();
     currentPath = null;
     currentVersion = null;
+    // Explicit disconnect ends the session — the next connect re-zeros.
+    originEstablished = false;
     autoConnectPaused = true;
     broadcast({ type: "connection", connected: false });
     res.json({ connected: false });
@@ -212,7 +240,7 @@ app.post("/api/home", async (_req, res) => {
 
 app.post("/api/set-origin", async (_req, res) => {
   try {
-    await plotter.zeroHere();
+    await setOriginHere();
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -419,7 +447,15 @@ async function tryAutoConnect() {
       return;
     }
     await driver.setAbsoluteMode().catch(() => {});
-    await plotter.zeroHere().catch(() => {});
+    if (originEstablished) {
+      // Reconnect after a transient drop (e.g. a CH340 cable hiccup). Preserve
+      // the origin — re-zeroing here would silently move it to the pen's
+      // current position and ruin a resumed/subsequent plot.
+      notify("warn", `Auto-reconnected to ${candidate.path}; origin preserved. Re-zero if the plotter lost power.`);
+    } else {
+      await setOriginHere().catch(() => {});
+      notify("info", `Auto-connected to ${candidate.path}; origin set at the current position.`);
+    }
     currentPath = candidate.path;
     currentVersion = version;
     console.log(`[auto-connect] connected to ${candidate.path} (${version})`);

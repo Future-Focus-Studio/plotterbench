@@ -380,6 +380,8 @@ export default function App() {
           version: ev.version ?? (ev.connected ? prev.version : undefined),
         }));
         if (ev.connected && ev.path) setSelectedPort(ev.path);
+      } else if (ev.type === "notice") {
+        setStatus({ msg: ev.message, kind: ev.level === "warn" ? "warn" : "ok" });
       } else if (ev.type === "progress") {
         setProgress(ev);
         if (ev.phase === "done") setStatus({ msg: "Plot complete", kind: "ok" });

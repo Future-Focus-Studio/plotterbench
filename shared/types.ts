@@ -96,6 +96,9 @@ export interface OptimizeStats {
 export type WsEvent =
   | { type: "hello"; connected: boolean; path?: string | null; version?: string | null }
   | { type: "connection"; connected: boolean; path?: string; version?: string }
+  // Out-of-band messages surfaced in the status area — e.g. an auto-connect
+  // happened, or the origin was preserved/re-zeroed on (re)connect.
+  | { type: "notice"; level: "info" | "warn"; message: string }
   | {
       type: "progress";
       phase: "preparing" | "drawing" | "paused" | "done" | "error" | "cancelled";

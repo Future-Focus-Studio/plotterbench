@@ -72,7 +72,7 @@ The plot treats the origin you set as the top-left of your page.
 - Optional **path optimization** (toggle in the UI) reorders polylines for shorter pen-up travel, reverses them where it helps, and merges endpoints that meet. Leave it off to plot in document order.
 - Long segments are subdivided to a max segment length so curves stay smooth; points are clamped to the page bounds.
 - Units: the frontend converts `width`/`height` and `viewBox` to mm. If your SVG has no units, it's treated as px (96px = 1 in).
-- The backend is local-only. Don't expose port 49787 publicly — there's no auth, and "plot" runs hardware.
+- The backend is local-only and enforces it: the server binds to `127.0.0.1` (not all interfaces), and both the API (CORS) and the WebSocket channel only accept loopback origins. There's no auth and "plot" runs hardware, so this is deliberate. To bind elsewhere anyway (at your own risk) set `HOST=0.0.0.0`.
 
 ## DrawCore command reference
 

@@ -16,7 +16,9 @@ export default defineConfig({
     port: 49173,
     strictPort: true,
     proxy: {
-      "/api": "http://localhost:49787",
+      // 127.0.0.1, not "localhost": the server binds IPv4 loopback, and Node's
+      // verbatim DNS may resolve localhost to ::1 first, which would refuse.
+      "/api": "http://127.0.0.1:49787",
       // /ws is intentionally NOT proxied. The browser opens the WebSocket
       // directly to ws://localhost:49787/ws (see openWs in web/src/api.ts).
     },

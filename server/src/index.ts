@@ -19,10 +19,37 @@ import {
 } from "../../shared/schema.js";
 
 const PORT = parseInt(process.env.PORT || "49787", 10);
+// Bind to loopback only by default. This server has no auth and /api/plot
+// drives physical motors, so it must not be reachable from the local network.
+// HOST can be overridden for advanced setups, but the safe default is enforced
+// in code, not just documented.
+const HOST = process.env.HOST || "127.0.0.1";
 const IS_PROD = process.env.NODE_ENV === "production";
 
+// Treat only loopback origins as trusted. The dev UI runs on :49173 and the
+// prod UI is served same-origin on :49787; both resolve to one of these hosts.
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+
+function isLocalOrigin(origin: string): boolean {
+  try {
+    return LOCAL_HOSTS.has(new URL(origin).hostname);
+  } catch {
+    return false;
+  }
+}
+
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, cb) {
+      // A missing Origin means a same-origin request or a non-browser client
+      // (curl, the packaged Electron shell). Allow those; the listener already
+      // only accepts loopback connections.
+      if (!origin || isLocalOrigin(origin)) return cb(null, true);
+      cb(new Error("Origin not allowed"));
+    },
+  }),
+);
 app.use(express.json({ limit: "25mb" }));
 
 // The active driver and the engine bound to it. Both are reassigned by
@@ -51,7 +78,14 @@ async function ensureDriverFor(port: PortInfo): Promise<void> {
 }
 
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: "/ws" });
+const wss = new WebSocketServer({
+  server,
+  path: "/ws",
+  // WebSocket upgrades bypass CORS, so gate them on the same loopback-origin
+  // check — the WS channel is what streams plot progress and commands.
+  verifyClient: ({ origin }: { origin?: string }) =>
+    !origin || isLocalOrigin(origin),
+});
 const clients = new Set<WebSocket>();
 wss.on("connection", (ws) => {
   clients.add(ws);
@@ -397,8 +431,8 @@ async function tryAutoConnect() {
 
 setInterval(tryAutoConnect, 5000);
 
-server.listen(PORT, () => {
-  console.log(`Plotter server listening on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Plotter server listening on http://${HOST}:${PORT}`);
   if (!IS_PROD) console.log(`Dev UI: http://localhost:49173`);
   // Kick off the first attempt right away — don't wait 5s.
   tryAutoConnect();

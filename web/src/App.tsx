@@ -5,6 +5,7 @@ import PageCanvas from "./PageCanvas.js";
 import SvgTree, { applyLayerColors, buildSvgTree, filterSvgByHidden, SvgTreeNode } from "./SvgTree.js";
 import { api, openWs, OptimizeStats, PlotOptions, PortInfo, WsEvent } from "./api.js";
 import { DEFAULT_PLOT_OPTIONS } from "@shared/types.js";
+import { lengthToMm } from "@shared/svg-units.js";
 
 type ConnectionState = {
   connected: boolean;
@@ -141,38 +142,6 @@ interface ParsedSvg {
   naturalHeightMm: number;
   /** Factor that converts 1 source user-unit to mm. */
   svgUnitsToMm: number;
-}
-
-function parseLength(v: string | null | undefined): { n: number; unit: string } | null {
-  if (!v) return null;
-  const m = v.trim().match(/^([-\d.eE+]+)\s*([a-z%]*)$/);
-  if (!m) return null;
-  const n = parseFloat(m[1]);
-  if (!Number.isFinite(n)) return null;
-  return { n, unit: m[2] || "" };
-}
-
-function lengthToMm(v: string | null | undefined): number | null {
-  const parsed = parseLength(v);
-  if (!parsed) return null;
-  const { n, unit } = parsed;
-  switch (unit) {
-    case "mm":
-      return n;
-    case "cm":
-      return n * 10;
-    case "in":
-      return n * 25.4;
-    case "pt":
-      return (n / 72) * 25.4;
-    case "pc":
-      return (n * 12 / 72) * 25.4;
-    case "":
-    case "px":
-      return (n / 96) * 25.4; // CSS: 96px = 1in
-    default:
-      return null;
-  }
 }
 
 function parseSvg(text: string): ParsedSvg | null {

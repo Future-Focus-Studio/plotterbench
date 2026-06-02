@@ -52,4 +52,47 @@ describe("flattenSvg", () => {
     const { polylines } = await flattenSvg(`<svg viewBox="0 0 10 10"></svg>`);
     expect(polylines).toEqual([]);
   });
+
+  it("skips elements hidden with display:none (attribute and inline style)", async () => {
+    const { polylines } = await flattenSvg(fixture("display-none.svg"));
+    // Only the top-level visible line survives; the display:none group and the
+    // style="display:none" rect are dropped.
+    expect(polylines).toEqual([[{ x: 0, y: 0 }, { x: 10, y: 0 }]]);
+  });
+
+  it("honours visibility inheritance with a descendant override", async () => {
+    const { polylines } = await flattenSvg(fixture("visibility-hidden.svg"));
+    // The group is visibility:hidden; only the child that flips it back to
+    // visible is drawn.
+    expect(polylines).toEqual([[{ x: 0, y: 5 }, { x: 10, y: 5 }]]);
+  });
+
+  it("resolves a <use> reference into <defs>, applying x/y offset", async () => {
+    const { polylines } = await flattenSvg(fixture("use-ref.svg"));
+    // The referenced line (0,0)->(10,0) is translated by the use's (5,5).
+    expect(polylines).toEqual([[{ x: 5, y: 5 }, { x: 15, y: 5 }]]);
+  });
+
+  it("renders a <use> of a <symbol> via xlink:href", async () => {
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">` +
+      `<symbol id="s"><rect x="0" y="0" width="10" height="10"/></symbol>` +
+      `<use xlink:href="#s" x="2" y="3"/></svg>`;
+    const { polylines } = await flattenSvg(svg);
+    expect(polylines).toEqual([[
+      { x: 2, y: 3 },
+      { x: 12, y: 3 },
+      { x: 12, y: 13 },
+      { x: 2, y: 13 },
+      { x: 2, y: 3 },
+    ]]);
+  });
+
+  it("does not loop forever on mutually-referential <use> elements", async () => {
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">` +
+      `<use id="a" href="#b"/><use id="b" href="#a"/></svg>`;
+    const { polylines } = await flattenSvg(svg);
+    expect(polylines).toEqual([]);
+  });
 });

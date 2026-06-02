@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">
+  <defs>
+    <line id="seg" x1="0" y1="0" x2="10" y2="0"/>
+  </defs>
+  <use href="#seg" x="5" y="5"/>
+</svg>

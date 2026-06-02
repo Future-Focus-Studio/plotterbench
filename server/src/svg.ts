@@ -314,6 +314,28 @@ const NON_RENDERING_TAGS = new Set([
   "plotdata",
 ]);
 
+/** Parse an inline `style` attribute into a property → value map. */
+function parseStyle(style: string | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!style) return out;
+  for (const decl of style.split(";")) {
+    const i = decl.indexOf(":");
+    if (i < 0) continue;
+    const key = decl.slice(0, i).trim().toLowerCase();
+    if (key) out[key] = decl.slice(i + 1).trim();
+  }
+  return out;
+}
+
+/**
+ * Resolve a CSS presentation property, honouring the precedence the browser
+ * uses: an inline `style` declaration wins over the presentation attribute.
+ * (Full <style> stylesheet/selector cascade is not supported — see README.)
+ */
+function cssProp(node: INode, name: string): string | undefined {
+  return parseStyle(node.attributes?.style)[name] ?? node.attributes?.[name];
+}
+
 /**
  * svg-path-properties occasionally returns a regression — a single sample that
  * jumps off-curve and back — when asked for very dense samples. We can't
@@ -396,12 +418,42 @@ export async function flattenSvg(svgText: string, opts: FlattenOptions = {}): Pr
 
   const polylines: Polyline[] = [];
 
-  const visit = (node: INode, parentTransform: Matrix) => {
+  // Index every element with an id so <use> can resolve references — including
+  // targets inside <defs>/<symbol>, which normal traversal deliberately skips.
+  const idMap = new Map<string, INode>();
+  const indexIds = (node: INode) => {
+    const id = node.attributes?.id;
+    if (id) idMap.set(id, node);
+    for (const child of node.children || []) indexIds(child);
+  };
+  indexIds(root);
+
+  // Bound <use> expansion so a self/mutually-referential <use> can't recurse
+  // forever (real documents nest only a handful deep).
+  const MAX_USE_DEPTH = 16;
+
+  const visit = (node: INode, parentTransform: Matrix, visible: boolean, useDepth: number) => {
     const tag = node.name?.toLowerCase();
     // Skip non-rendering containers AND all their descendants. Otherwise the
     // flattener will plot shapes defined inside <defs>, <clipPath>, etc.
     if (tag && NON_RENDERING_TAGS.has(tag)) return;
+
+    // display:none removes the element and its whole subtree from rendering.
+    if (cssProp(node, "display") === "none") return;
+
+    // visibility inherits but a descendant can re-enable it, so thread the
+    // effective value down rather than pruning the subtree.
+    const vis = cssProp(node, "visibility");
+    const nodeVisible =
+      vis === "hidden" || vis === "collapse" ? false : vis === "visible" ? true : visible;
+
     const t = multiply(parentTransform, parseTransform(node.attributes?.transform));
+
+    if (tag === "use") {
+      expandUse(node, t, nodeVisible, useDepth);
+      return;
+    }
+
     let raw: Polyline[] = [];
 
     if (node.name === "path" && node.attributes.d) {
@@ -430,15 +482,41 @@ export async function flattenSvg(svgText: string, opts: FlattenOptions = {}): Pr
       if (d) raw = [samplePath(d, tolerance)];
     }
 
-    for (const pl of raw) {
-      if (pl.length < 2) continue;
-      const transformed = pl.map((p) => apply(t, p));
-      polylines.push(dropChordSpikes(transformed));
+    // Geometry of an invisible element is dropped, but we still recurse: a
+    // hidden group can contain a child that turns visibility back on.
+    if (nodeVisible) {
+      for (const pl of raw) {
+        if (pl.length < 2) continue;
+        const transformed = pl.map((p) => apply(t, p));
+        polylines.push(dropChordSpikes(transformed));
+      }
     }
 
-    for (const child of node.children || []) visit(child, t);
+    for (const child of node.children || []) visit(child, t, nodeVisible, useDepth);
   };
 
-  visit(root, IDENTITY);
+  // Render a <use> by drawing its referenced element as if cloned in place.
+  const expandUse = (node: INode, baseTransform: Matrix, visible: boolean, useDepth: number) => {
+    if (useDepth >= MAX_USE_DEPTH) return;
+    const href = node.attributes?.href ?? node.attributes?.["xlink:href"];
+    if (!href || !href.startsWith("#")) return;
+    const target = idMap.get(href.slice(1));
+    if (!target) return;
+
+    // x/y on <use> are an extra translation applied after the use's transform.
+    const x = parseFloat(node.attributes?.x ?? "") || 0;
+    const y = parseFloat(node.attributes?.y ?? "") || 0;
+    const t = x || y ? multiply(baseTransform, [1, 0, 0, 1, x, y] as Matrix) : baseTransform;
+
+    const targetTag = target.name?.toLowerCase();
+    if (targetTag === "symbol" || targetTag === "svg") {
+      // <symbol>/<svg> never render on their own, but a <use> renders content.
+      for (const child of target.children || []) visit(child, t, visible, useDepth + 1);
+    } else {
+      visit(target, t, visible, useDepth + 1);
+    }
+  };
+
+  visit(root, IDENTITY, true, 0);
   return { polylines, viewBox };
 }

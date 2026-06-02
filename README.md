@@ -74,6 +74,22 @@ The plot treats the origin you set as the top-left of your page.
 - Units: the frontend converts `width`/`height` and `viewBox` to mm. If your SVG has no units, it's treated as px (96px = 1 in).
 - The backend is local-only and enforces it: the server binds to `127.0.0.1` (not all interfaces), and both the API (CORS) and the WebSocket channel only accept loopback origins. There's no auth and "plot" runs hardware, so this is deliberate. To bind elsewhere anyway (at your own risk) set `HOST=0.0.0.0`.
 
+### Supported SVG features
+
+The server flattener (`server/src/svg.ts`) turns your SVG into pen polylines. It is not a full SVG renderer — it covers what plotter artwork actually uses.
+
+**Supported:** `<path>` (all commands, including arcs and S/T smooth curves), `<line>`, `<polyline>`, `<polygon>`, `<rect>`, `<circle>`, `<ellipse>`; nested `transform`s (`matrix`/`translate`/`scale`/`rotate`/`skewX`/`skewY`); `<use>` references (incl. `xlink:href`, `x`/`y` offset, and `<symbol>` targets); `display:none` and `visibility:hidden` (as a presentation attribute *or* an inline `style="…"`); `<defs>`/`<clipPath>`/`<mask>`/etc. correctly treated as non-rendering.
+
+**Not supported (yet) — outline or expand these in your editor first:**
+
+- **`<text>`** — convert text to paths/outlines (Inkscape: *Path → Object to Path*; Illustrator: *Type → Create Outlines*).
+- **`<image>`** and other raster content — there's nothing to draw.
+- **`<style>` stylesheets / CSS selectors** — only inline `style="…"` and presentation attributes are honoured. Flatten styles to the elements (most exporters have an option for this).
+- **`clipPath` / `mask` geometry** — the clip/mask shapes are ignored, so clipped artwork is drawn unclipped (full, uncut paths).
+- **Nested `viewBox` / `preserveAspectRatio`** on inner `<svg>`/`<symbol>` — inner viewports aren't scaled.
+
+When in doubt, outline text and expand clones/clips before plotting.
+
 ## DrawCore command reference
 
 The DrawCore firmware is Grbl-derived: it runs over a CH340 USB-UART at **115200 baud**, and most commands reply with `ok`. A few queries reply with a single data line and no `ok`; errors come back as `error:<n>` or `ALARM:`. The commands this project uses:

@@ -19,10 +19,7 @@ const inToMm = (n: number) => n * 25.4;
 const mmToIn = (n: number) => n / 25.4;
 
 // ---- Persistence ----
-const PRESETS_KEY = "plotterbench-page-presets";
 const SETTINGS_KEY = "plotterbench-settings";
-
-type PresetMap = Record<string, { w: number; h: number }>;
 
 interface SavedSettings {
   selectedPort: string;
@@ -124,13 +121,6 @@ function useSettings(): [SavedSettings, SetSetting] {
   }, []);
 
   return [settings, set];
-}
-
-function loadPresets(): PresetMap {
-  try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || "{}"); } catch { return {}; }
-}
-function savePresets(p: PresetMap) {
-  localStorage.setItem(PRESETS_KEY, JSON.stringify(p));
 }
 
 interface ParsedSvg {
@@ -297,10 +287,6 @@ export default function App() {
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [conn, setConn] = useState<ConnectionState>({ connected: false });
   const [status, setStatus] = useState<{ msg: string; kind: "ok" | "error" | "warn" } | null>(null);
-
-  const [presets, setPresets] = useState<PresetMap>(() => loadPresets());
-  const [presetName, setPresetName] = useState("");
-  const [selectedPreset, setSelectedPreset] = useState("");
 
   const [settings, setSetting] = useSettings();
   const {
@@ -740,32 +726,6 @@ export default function App() {
         {conn.connected && <div className="status">Connected {conn.path}{conn.version ? ` · ${conn.version}` : ""}</div>}
 
         <h2>Page</h2>
-        {Object.keys(presets).length > 0 && (
-          <div className="row">
-            <select
-              value={selectedPreset}
-              onChange={(e) => {
-                const p = presets[e.target.value];
-                if (p) { setPageW(p.w); setPageH(p.h); }
-                setSelectedPreset(e.target.value);
-              }}
-            >
-              <option value="">Load preset…</option>
-              {Object.keys(presets).map((k) => <option key={k} value={k}>{k}</option>)}
-            </select>
-            <button
-              className="secondary"
-              disabled={!selectedPreset}
-              onClick={() => {
-                const updated = { ...presets };
-                delete updated[selectedPreset];
-                setPresets(updated);
-                savePresets(updated);
-                setSelectedPreset("");
-              }}
-            >Delete</button>
-          </div>
-        )}
         <div className="row">
           <label>Width (in)</label>
           <NumberInput
@@ -795,26 +755,6 @@ export default function App() {
             onClick={() => setPageBackground("#ffffff")}
             title="Reset to white"
           >Reset</button>
-        </div>
-        <div className="row">
-          <input
-            type="text"
-            placeholder="Preset name…"
-            value={presetName}
-            onChange={(e) => setPresetName(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              const name = presetName.trim();
-              if (!name) return;
-              const updated = { ...presets, [name]: { w: pageW, h: pageH } };
-              setPresets(updated);
-              savePresets(updated);
-              setPresetName("");
-              setSelectedPreset(name);
-            }}
-            disabled={!presetName.trim()}
-          >Save</button>
         </div>
 
         <h2>SVG</h2>

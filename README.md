@@ -56,7 +56,7 @@ This builds the web app to `dist/web/` and the server to `server/dist/`, then se
 ## Workflow
 
 1. **Connect** to the plotter (Refresh → select port → Connect). The server verifies the firmware reports `DrawCore`.
-2. Set **page** size in inches. You can save named presets and reload them later (stored in your browser).
+2. Set **page** size in inches.
 3. Load an SVG (drop or browse). Adjust width/height (aspect locked by default) and drag the dashed outline on the page to position. Per-layer labels and an **Optimization** preview (strokes, merged, reversed, travel saved) help you check the plan first.
 4. Use **Orientation** toggles (flip X, flip Y, swap X/Y) if your plot comes out mirrored or rotated.
 5. Use **Pen up / Pen down** to test the servo, **Motors off** to release the steppers, **Home** to return to 0,0.

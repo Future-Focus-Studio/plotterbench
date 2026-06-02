@@ -8,6 +8,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { PlotterDriver, PortInfo } from "./drivers/types.js";
 import { detectDriver, listPorts, DEFAULT_DRIVER } from "./drivers/registry.js";
 import { flattenSvg } from "./svg.js";
+import { isLocalOrigin } from "./origin.js";
 import { optimizePolylines } from "./optimize.js";
 import { planPolylines, Plotter, PlotProgress } from "./plotter.js";
 import {
@@ -25,18 +26,6 @@ const PORT = parseInt(process.env.PORT || "49787", 10);
 // in code, not just documented.
 const HOST = process.env.HOST || "127.0.0.1";
 const IS_PROD = process.env.NODE_ENV === "production";
-
-// Treat only loopback origins as trusted. The dev UI runs on :49173 and the
-// prod UI is served same-origin on :49787; both resolve to one of these hosts.
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
-
-function isLocalOrigin(origin: string): boolean {
-  try {
-    return LOCAL_HOSTS.has(new URL(origin).hostname);
-  } catch {
-    return false;
-  }
-}
 
 const app = express();
 app.use(

@@ -283,6 +283,19 @@ function OptimizeSummary({ stats }: { stats: OptimizeStats }) {
   );
 }
 
+/**
+ * Refresh / reset glyph. Public-domain icon from The Noun Project
+ * ("Refresh" by Marina Rizo, Mono Icons). Single filled path so it stays crisp
+ * at tiny sizes; uses currentColor to inherit the button's text colour.
+ */
+function RefreshIcon() {
+  return (
+    <svg viewBox="0 0 100 100" width="14" height="14" fill="currentColor" aria-hidden="true">
+      <path d="m53.305 9.5547c1.625-1.6289 4.2656-1.6289 5.8906 0l12.5 12.5c1.6289 1.625 1.6289 4.2656 0 5.8906l-12.5 12.5c-1.625 1.6289-4.2656 1.6289-5.8906 0-1.6289-1.625-1.6289-4.2656 0-5.8906l5.3867-5.3867h-6.6094c-14.781 0-27.082 12.301-27.082 27.082s12.301 27.082 27.082 27.082c14.785 0 27.086-12.301 27.086-27.082 0-2.3008 1.8633-4.168 4.1641-4.168s4.168 1.8672 4.168 4.168c0 19.383-16.031 35.418-35.418 35.418-19.383 0-35.414-16.035-35.414-35.418s16.031-35.418 35.414-35.418h6.6094l-5.3867-5.3867c-1.6289-1.625-1.6289-4.2656 0-5.8906z" />
+    </svg>
+  );
+}
+
 export default function App() {
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [conn, setConn] = useState<ConnectionState>({ connected: false });
@@ -745,20 +758,24 @@ export default function App() {
               onCommit={(v) => setPageH(inToMm(v))}
             />
           </div>
-        </div>
-        <div className="row">
-          <label>Background</label>
-          <input
-            type="color"
-            value={pageBackground}
-            onChange={(e) => setPageBackground(e.target.value)}
-            title="Preview only — not plotted"
-          />
-          <button
-            className="secondary"
-            onClick={() => setPageBackground("#ffffff")}
-            title="Reset to white"
-          >Reset</button>
+          <div className="page-dims-cell label">Background</div>
+          <div className="page-dims-cell page-dims-bg">
+            <input
+              type="color"
+              className="page-bg-swatch"
+              value={pageBackground}
+              onChange={(e) => setPageBackground(e.target.value)}
+              title="Preview only — not plotted"
+            />
+            <button
+              className="page-bg-reset"
+              onClick={() => setPageBackground("#ffffff")}
+              title="Reset to white"
+              aria-label="Reset background to white"
+            >
+              <RefreshIcon />
+            </button>
+          </div>
         </div>
 
         <h2>SVG</h2>

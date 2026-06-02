@@ -77,6 +77,31 @@ h2:first-child { margin-top: 0; }
   font-size: 13px;
   outline: none;
 }
+.page-dims-bg { gap: 8px; }
+.page-bg-swatch {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.page-bg-reset {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: #888;
+  cursor: pointer;
+  line-height: 0;
+}
+.page-bg-reset:hover { color: #eee; }
 
 button {
   background: #2a6;

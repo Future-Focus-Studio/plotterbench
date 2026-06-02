@@ -93,6 +93,38 @@ function loadSettings(): SavedSettings {
   } catch { return DEFAULTS; }
 }
 
+/** A setter argument: a new value, or an updater of the previous value. */
+type SetArg<T> = T | ((prev: T) => T);
+type SetSetting = <K extends keyof SavedSettings>(key: K, value: SetArg<SavedSettings[K]>) => void;
+
+/**
+ * Single source of truth for all persisted settings. Holds the whole
+ * `SavedSettings` object as one state and persists it with one debounced
+ * effect, so there is no hand-maintained persistence literal or dependency
+ * array to keep in sync (the old source of silent persistence bugs).
+ */
+function useSettings(): [SavedSettings, SetSetting] {
+  const [settings, setSettings] = useState<SavedSettings>(loadSettings);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [settings]);
+
+  const set = useCallback<SetSetting>((key, value) => {
+    setSettings((prev) => {
+      const next = typeof value === "function"
+        ? (value as (p: SavedSettings[typeof key]) => SavedSettings[typeof key])(prev[key])
+        : value;
+      return Object.is(prev[key], next) ? prev : { ...prev, [key]: next };
+    });
+  }, []);
+
+  return [settings, set];
+}
+
 function loadPresets(): PresetMap {
   try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || "{}"); } catch { return {}; }
 }
@@ -301,40 +333,60 @@ export default function App() {
   const [presetName, setPresetName] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("");
 
-  const [s] = useState<SavedSettings>(() => loadSettings());
-  const [selectedPort, setSelectedPort] = useState(s.selectedPort);
-  const [pageW, setPageW] = useState(s.pageW);
-  const [pageH, setPageH] = useState(s.pageH);
-  const [pageBackground, setPageBackground] = useState(s.pageBackground);
-  const [parsed, setParsed] = useState<ParsedSvg | null>(s.parsed);
-  const [widthMm, setWidthMm] = useState(s.widthMm);
-  const [heightMm, setHeightMm] = useState(s.heightMm);
-  const [lockAspect, setLockAspect] = useState(s.lockAspect);
-  const [lockCenter, setLockCenter] = useState(s.lockCenter);
-  const [offsetX, setOffsetX] = useState(s.offsetX);
-  const [offsetY, setOffsetY] = useState(s.offsetY);
-  const [drawSpeed, setDrawSpeed] = useState(s.drawSpeed);
-  const [travelSpeed, setTravelSpeed] = useState(s.travelSpeed);
-  const [penDownDelayMs, setPenDownDelayMs] = useState(s.penDownDelayMs);
-  const [penUpDelayMs, setPenUpDelayMs] = useState(s.penUpDelayMs);
-  const [penUpZ, setPenUpZ] = useState(s.penUpZ);
-  const [penDownZ, setPenDownZ] = useState(s.penDownZ);
-  const [penSpeedMmPerMin, setPenSpeedMmPerMin] = useState(s.penSpeedMmPerMin);
-  const [flipX, setFlipX] = useState(s.flipX);
-  const [flipY, setFlipY] = useState(s.flipY);
-  const [swapXY, setSwapXY] = useState(s.swapXY);
-  const [optimizePaths, setOptimizePaths] = useState(s.optimizePaths);
-  const [reversePaths, setReversePaths] = useState(s.reversePaths);
-  const [previewThinLines, setPreviewThinLines] = useState(s.previewThinLines);
-  const [testPatternOn, setTestPatternOn] = useState(s.testPatternOn);
+  const [settings, setSetting] = useSettings();
+  const {
+    selectedPort, pageW, pageH, pageBackground, parsed,
+    widthMm, heightMm, lockAspect, lockCenter, offsetX, offsetY,
+    drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs,
+    penUpZ, penDownZ, penSpeedMmPerMin,
+    flipX, flipY, swapXY, optimizePaths, reversePaths,
+    previewThinLines, testPatternOn, layerLabels, layerColors,
+  } = settings;
+
+  // Per-field setters preserve the original `useState` ergonomics at call sites
+  // while the store owns persistence. Adding a setting is: extend SavedSettings
+  // + DEFAULTS (TypeScript links them) and bind it here — a missing binding is a
+  // compile error, not silently-dropped persistence.
+  const setSelectedPort = (v: SetArg<string>) => setSetting("selectedPort", v);
+  const setPageW = (v: SetArg<number>) => setSetting("pageW", v);
+  const setPageH = (v: SetArg<number>) => setSetting("pageH", v);
+  const setPageBackground = (v: SetArg<string>) => setSetting("pageBackground", v);
+  const setParsed = (v: SetArg<ParsedSvg | null>) => setSetting("parsed", v);
+  const setWidthMm = (v: SetArg<number>) => setSetting("widthMm", v);
+  const setHeightMm = (v: SetArg<number>) => setSetting("heightMm", v);
+  const setLockAspect = (v: SetArg<boolean>) => setSetting("lockAspect", v);
+  const setLockCenter = (v: SetArg<boolean>) => setSetting("lockCenter", v);
+  const setOffsetX = (v: SetArg<number>) => setSetting("offsetX", v);
+  const setOffsetY = (v: SetArg<number>) => setSetting("offsetY", v);
+  const setDrawSpeed = (v: SetArg<number>) => setSetting("drawSpeed", v);
+  const setTravelSpeed = (v: SetArg<number>) => setSetting("travelSpeed", v);
+  const setPenDownDelayMs = (v: SetArg<number>) => setSetting("penDownDelayMs", v);
+  const setPenUpDelayMs = (v: SetArg<number>) => setSetting("penUpDelayMs", v);
+  const setPenUpZ = (v: SetArg<number>) => setSetting("penUpZ", v);
+  const setPenDownZ = (v: SetArg<number>) => setSetting("penDownZ", v);
+  const setPenSpeedMmPerMin = (v: SetArg<number>) => setSetting("penSpeedMmPerMin", v);
+  const setFlipX = (v: SetArg<boolean>) => setSetting("flipX", v);
+  const setFlipY = (v: SetArg<boolean>) => setSetting("flipY", v);
+  const setSwapXY = (v: SetArg<boolean>) => setSetting("swapXY", v);
+  const setOptimizePaths = (v: SetArg<boolean>) => setSetting("optimizePaths", v);
+  const setReversePaths = (v: SetArg<boolean>) => setSetting("reversePaths", v);
+  const setPreviewThinLines = (v: SetArg<boolean>) => setSetting("previewThinLines", v);
+  const setTestPatternOn = (v: SetArg<boolean>) => setSetting("testPatternOn", v);
+  const setLayerLabels = (v: SetArg<Record<string, string>>) => setSetting("layerLabels", v);
+  const setLayerColors = (v: SetArg<Record<string, string>>) => setSetting("layerColors", v);
+
+  // hiddenKeys is persisted as an array but consumed as a Set in the UI; bridge
+  // the two here so the array/Set conversion lives in one place.
+  const hiddenKeys = useMemo(() => new Set(settings.hiddenKeys), [settings.hiddenKeys]);
+  const setHiddenKeys = (next: SetArg<Set<string>>) =>
+    setSetting("hiddenKeys", (prev) =>
+      Array.from(typeof next === "function" ? next(new Set(prev)) : next));
+
   const [optimizeStats, setOptimizeStats] = useState<OptimizeStats | null>(null);
   const [optimizeLoading, setOptimizeLoading] = useState(false);
 
-  const [svgTree, setSvgTree] = useState<SvgTreeNode[]>(() => s.parsed ? buildSvgTree(s.parsed.text) : []);
+  const [svgTree, setSvgTree] = useState<SvgTreeNode[]>(() => settings.parsed ? buildSvgTree(settings.parsed.text) : []);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
-  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set(s.hiddenKeys));
-  const [layerLabels, setLayerLabels] = useState<Record<string, string>>(s.layerLabels);
-  const [layerColors, setLayerColors] = useState<Record<string, string>>(s.layerColors);
 
   const [progress, setProgress] = useState<ProgressState>(null);
   const [plotPolylines, setPlotPolylines] = useState<{ x: number; y: number }[][] | null>(null);
@@ -355,7 +407,7 @@ export default function App() {
         // Pick the port to auto-connect. Prefer whichever port VID/PID-matches
         // a DrawCore plotter — the saved port is only a fallback for unusual
         // setups where the plotter doesn't enumerate as a CH340.
-        const savedPath = s.selectedPort;
+        const savedPath = settings.selectedPort;
         const portToUse =
           r.ports.find((p) => p.likelyPlotter)?.path ??
           (savedPath && r.ports.some((p) => p.path === savedPath) ? savedPath : null) ??
@@ -395,28 +447,8 @@ export default function App() {
     return () => close();
   }, []);
 
-  // Persist settings to localStorage whenever they change
-  useEffect(() => {
-    const t = setTimeout(() => {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        selectedPort, pageW, pageH, pageBackground, parsed,
-        widthMm, heightMm, lockAspect,
-        lockCenter,
-        offsetX, offsetY,
-        drawSpeed, travelSpeed,
-        penDownDelayMs, penUpDelayMs,
-        penUpZ, penDownZ, penSpeedMmPerMin,
-        flipX, flipY, swapXY,
-        optimizePaths, reversePaths,
-        previewThinLines,
-        testPatternOn,
-        hiddenKeys: Array.from(hiddenKeys),
-        layerLabels,
-        layerColors,
-      } satisfies SavedSettings));
-    }, 300);
-    return () => clearTimeout(t);
-  }, [selectedPort, pageW, pageH, pageBackground, parsed, widthMm, heightMm, lockAspect, lockCenter, offsetX, offsetY, drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs, penUpZ, penDownZ, penSpeedMmPerMin, flipX, flipY, swapXY, optimizePaths, reversePaths, previewThinLines, testPatternOn, hiddenKeys, layerLabels, layerColors]);
+  // Persistence is handled inside useSettings — the whole settings object is
+  // saved with one debounced effect, so there's nothing to keep in sync here.
 
   // Keep SVG centered on the page when lockCenter is on.
   useEffect(() => {
@@ -457,21 +489,20 @@ export default function App() {
   }, [pageW, pageH]);
 
   const rotate90 = useCallback(() => {
-    setParsed((prev) => {
-      if (!prev) return prev;
-      const rotated = rotateSvg90(prev);
-      setSvgTree(buildSvgTree(rotated.text));
-      setHiddenKeys((prevKeys) => {
-        const next = new Set<string>();
-        for (const k of prevKeys) next.add(`0-${k}`);
-        return next;
-      });
-      setExpandedKeys(new Set());
-      return rotated;
+    if (!parsed) return;
+    const rotated = rotateSvg90(parsed);
+    setSvgTree(buildSvgTree(rotated.text));
+    setExpandedKeys(new Set());
+    // Re-key hidden layers under the new rotation wrapper.
+    setHiddenKeys((prevKeys) => {
+      const next = new Set<string>();
+      for (const k of prevKeys) next.add(`0-${k}`);
+      return next;
     });
+    setParsed(rotated);
     setWidthMm(heightMm);
     setHeightMm(widthMm);
-  }, [widthMm, heightMm]);
+  }, [parsed, widthMm, heightMm]);
 
   const onFile = useCallback(async (file: File) => {
     const text = await file.text();

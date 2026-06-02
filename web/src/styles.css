@@ -46,6 +46,38 @@ h2:first-child { margin-top: 0; }
 }
 .row input[type=number] { width: 80px; flex: 0 0 80px; }
 
+/* Compact 2x2 grid for page width/height: label cell + value cell per row. */
+.page-dims {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.page-dims-cell {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #eee;
+  border-right: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+.page-dims-cell.label { color: #aaa; background: #1d1d1d; }
+/* Drop the outer borders: right edge of the value column, bottom of last row. */
+.page-dims-cell:nth-child(2n) { border-right: none; }
+.page-dims-cell:nth-last-child(-n+2) { border-bottom: none; }
+.page-dim-input {
+  width: 100%;
+  background: transparent;
+  color: #eee;
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+  outline: none;
+}
+
 button {
   background: #2a6;
   color: #fff;

@@ -726,21 +726,25 @@ export default function App() {
         {conn.connected && <div className="status">Connected {conn.path}{conn.version ? ` · ${conn.version}` : ""}</div>}
 
         <h2>Page</h2>
-        <div className="row">
-          <label>Width (in)</label>
-          <NumberInput
-            step="0.01" min="0.1" decimals={2}
-            value={mmToIn(pageW)}
-            onCommit={(v) => setPageW(inToMm(v))}
-          />
-        </div>
-        <div className="row">
-          <label>Height (in)</label>
-          <NumberInput
-            step="0.01" min="0.1" decimals={2}
-            value={mmToIn(pageH)}
-            onCommit={(v) => setPageH(inToMm(v))}
-          />
+        <div className="page-dims">
+          <div className="page-dims-cell label">Width (in)</div>
+          <div className="page-dims-cell">
+            <NumberInput
+              className="page-dim-input"
+              step="0.01" min="0.1" decimals={2}
+              value={mmToIn(pageW)}
+              onCommit={(v) => setPageW(inToMm(v))}
+            />
+          </div>
+          <div className="page-dims-cell label">Height (in)</div>
+          <div className="page-dims-cell">
+            <NumberInput
+              className="page-dim-input"
+              step="0.01" min="0.1" decimals={2}
+              value={mmToIn(pageH)}
+              onCommit={(v) => setPageH(inToMm(v))}
+            />
+          </div>
         </div>
         <div className="row">
           <label>Background</label>

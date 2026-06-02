@@ -64,7 +64,7 @@ h2:first-child { margin-top: 0; }
   border-right: 1px solid #333;
   border-bottom: 1px solid #333;
 }
-.page-dims-cell.label { color: #aaa; background: #1d1d1d; }
+.page-dims-cell.label { color: #aaa; background: #1d1d1d; text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; }
 /* Drop the outer borders: right edge of the value column, bottom of last row. */
 .page-dims-cell:nth-child(2n) { border-right: none; }
 .page-dims-cell:nth-last-child(-n+2) { border-bottom: none; }

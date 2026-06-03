@@ -743,7 +743,7 @@ export default function App() {
             })}
           </select>
         </div>
-        <div className="row">
+        <div className="row row-2col">
           <button className="secondary" onClick={refreshPorts}>Refresh</button>
           {!conn.connected ? (
             <button onClick={connect} disabled={!selectedPort}>Connect</button>
@@ -992,25 +992,6 @@ export default function App() {
       </main>
 
       <aside className="sidebar sidebar-right">
-        {displayParsed && (
-          <div className={`section${testPatternOn ? " dimmed" : ""}`}>
-            <h2>Optimization</h2>
-            <div className="field-grid">
-              <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
-              <div className="field-grid-cell">
-                <input id="cb-optimize" className="field-checkbox" type="checkbox"
-                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
-              </div>
-            </div>
-            {optimizePaths && (
-              <div className="optimize-summary">
-                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
-                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
-              </div>
-            )}
-          </div>
-        )}
-
         <div className="section">
         <h2>Pen speed</h2>
         <div className="field-grid">
@@ -1052,6 +1033,23 @@ export default function App() {
 
         <div className="section section-grow">
         <h2>Instructions</h2>
+        {displayParsed && (
+          <div className={testPatternOn ? "dimmed" : undefined}>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
+              <div className="field-grid-cell">
+                <input id="cb-optimize" className="field-checkbox" type="checkbox"
+                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
+              </div>
+            </div>
+            {optimizePaths && (
+              <div className="optimize-summary">
+                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
+                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
+              </div>
+            )}
+          </div>
+        )}
         <div className="instr-panel">
           <InstructionList
             polylines={plotPolylines}

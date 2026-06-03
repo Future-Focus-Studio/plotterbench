@@ -181,20 +181,31 @@ label.field-grid-cell { cursor: pointer; }
 .page-bg-reset:hover,
 .field-icon-btn:hover { color: #eee; }
 
+/* Buttons are outline style by default (used outside the Controls grid). */
 button {
-  background: #2a6;
-  color: #fff;
-  border: 0;
+  background: transparent;
+  color: #4cc38a;
+  border: 1px solid #2a6;
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
 }
-button.secondary { background: #444; }
-button.danger { background: #c33; }
-button:disabled { background: #333; color: #777; cursor: not-allowed; }
+button:hover { background: rgba(255, 255, 255, 0.06); }
+button.secondary { color: #ddd; border-color: #777; }
+button.danger { color: #e88; border-color: #d66; }
+button:disabled { background: transparent; color: #555; border-color: #3a3a3a; cursor: not-allowed; }
 button + button { margin-left: 6px; }
+
+/* Buttons inside the Controls two-column grid keep the filled style. */
+.ctrl-row button { background: #2a6; color: #fff; border-color: transparent; }
+.ctrl-row button.secondary { background: #444; color: #fff; }
+.ctrl-row button.danger { background: #c33; color: #fff; }
+.ctrl-row button:disabled { background: #333; color: #777; border-color: transparent; }
+
+/* A .row whose two buttons should split 50/50. */
+.row-2col > button { flex: 1 1 0; min-width: 0; margin: 0; }
 
 /* Controls section: two equal 50% columns per row (not the field grid). */
 .ctrl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }

@@ -724,6 +724,7 @@ export default function App() {
   return (
     <div className="app">
       <aside className="sidebar">
+        <div className="section">
         <h2>Connection</h2>
         <div className="row">
           <select value={selectedPort} onChange={(e) => setSelectedPort(e.target.value)}>
@@ -751,7 +752,9 @@ export default function App() {
           )}
         </div>
         {conn.connected && <div className="status">Connected {conn.path}{conn.version ? ` · ${conn.version}` : ""}</div>}
+        </div>
 
+        <div className="section">
         <h2>Page</h2>
         <div className="field-grid">
           <div className="field-grid-cell label">Width (in)</div>
@@ -791,7 +794,9 @@ export default function App() {
             </button>
           </div>
         </div>
+        </div>
 
+        <div className="section">
         <h2>Calibration</h2>
         <div className="field-grid">
           <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
@@ -800,7 +805,9 @@ export default function App() {
               checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
           </div>
         </div>
+        </div>
 
+        <div className="section">
         <h2>SVG</h2>
         {parsed ? (
           <div
@@ -925,9 +932,10 @@ export default function App() {
             </div>
           </div>
         )}
+        </div>
 
         {displayParsed && (
-          <div className={testPatternOn ? "dimmed" : undefined}>
+          <div className={`section${testPatternOn ? " dimmed" : ""}`}>
             <h2>Path modifications</h2>
             <div className="field-grid">
               <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
@@ -985,7 +993,7 @@ export default function App() {
 
       <aside className="sidebar sidebar-right">
         {displayParsed && (
-          <div className={testPatternOn ? "dimmed" : undefined}>
+          <div className={`section${testPatternOn ? " dimmed" : ""}`}>
             <h2>Optimization</h2>
             <div className="field-grid">
               <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
@@ -1003,6 +1011,7 @@ export default function App() {
           </div>
         )}
 
+        <div className="section">
         <h2>Pen speed</h2>
         <div className="field-grid">
           <div className="field-grid-cell label">Draw (mm/s)</div>
@@ -1039,7 +1048,9 @@ export default function App() {
             />
           </div>
         </div>
+        </div>
 
+        <div className="section section-grow">
         <h2>Instructions</h2>
         <div className="instr-panel">
           <InstructionList
@@ -1052,7 +1063,9 @@ export default function App() {
             rewindDisabled={!conn.connected || !displayParsed || plotting || paused}
           />
         </div>
+        </div>
 
+        <div className="section">
         <h2>Controls</h2>
         <div className="ctrl-row">
           <button
@@ -1098,6 +1111,7 @@ export default function App() {
           </>
         )}
         {status && <div className={`status ${status.kind === "error" ? "error" : status.kind === "warn" ? "warn" : ""}`}>{status.msg}</div>}
+        </div>
       </aside>
     </div>
   );

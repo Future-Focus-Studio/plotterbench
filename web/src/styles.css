@@ -50,7 +50,7 @@ h2:first-child { margin-top: 0; }
    the Page and Speed sections. */
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;

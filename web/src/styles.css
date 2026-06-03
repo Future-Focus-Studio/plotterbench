@@ -78,6 +78,7 @@ h2:first-child { margin-top: 0; }
   font-size: 13px;
   outline: none;
 }
+.field-input:disabled { color: #555; cursor: not-allowed; }
 .page-dims-bg { gap: 8px; }
 .page-bg-swatch {
   flex: 1;

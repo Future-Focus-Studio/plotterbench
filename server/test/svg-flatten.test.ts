@@ -95,4 +95,25 @@ describe("flattenSvg", () => {
     const { polylines } = await flattenSvg(svg);
     expect(polylines).toEqual([]);
   });
+
+  it("keeps every corner of a steep staircase (no spike-filter collapse)", async () => {
+    // Regression: a staircase with tall risers (122) and short treads (21).
+    // The risers are >10x the median chord, which the old global spike filter
+    // mistook for sampling spikes — dropping the riser endpoints collapsed the
+    // stairs into a straight diagonal. Straight L geometry must pass untouched.
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960"><path d="` +
+      `M 564 702 L 564 580 L 543 580 L 543 458 L 522 458 L 522 336 L 501 336` +
+      `"/></svg>`;
+    const { polylines } = await flattenSvg(svg);
+    expect(polylines).toEqual([[
+      { x: 564, y: 702 },
+      { x: 564, y: 580 },
+      { x: 543, y: 580 },
+      { x: 543, y: 458 },
+      { x: 522, y: 458 },
+      { x: 522, y: 336 },
+      { x: 501, y: 336 },
+    ]]);
+  });
 });

@@ -82,7 +82,8 @@ function samplePath(d: string, tolerance: number): Polyline {
     const p = props.getPointAtLength((i / n) * total);
     pts.push({ x: p.x, y: p.y });
   }
-  return pts;
+  // These are curve samples, so de-spike them (see dropChordSpikes).
+  return dropChordSpikes(pts);
 }
 
 // Number of parameters consumed per command letter.
@@ -153,11 +154,18 @@ function flattenPathD(d: string, tolerance: number): Polyline[] {
     const total = props.getTotalLength();
     if (total === 0) { addPt(ex, ey); return; }
     const n = Math.max(1, Math.ceil(total / Math.max(0.05, tolerance)));
+    // Collect this segment's samples (with the start point for context and the
+    // exact endpoint), de-spike them, then emit. Spike filtering is confined to
+    // curve samples here — straight commands never pass through sampleSeg, so a
+    // legitimately long straight segment can't be mistaken for a sampling spike.
+    const seg: Polyline = [{ x: cx, y: cy }];
     for (let i = 1; i <= n; i++) {
       const p = props.getPointAtLength((i / n) * total);
-      addPt(p.x, p.y);
+      seg.push({ x: p.x, y: p.y });
     }
-    addPt(ex, ey);
+    seg.push({ x: ex, y: ey });
+    const cleaned = dropChordSpikes(seg);
+    for (let i = 1; i < cleaned.length; i++) addPt(cleaned[i].x, cleaned[i].y);
   };
 
   for (const [cmd, args] of parseCmds(d)) {
@@ -343,6 +351,12 @@ function cssProp(node: INode, name: string): string | undefined {
  * we filter the output: any chord more than 10× the median chord of the
  * polyline AND larger than 1 unit is treated as a spike and the offending
  * point is dropped. Real curves don't produce isolated 10× chord jumps.
+ *
+ * IMPORTANT: only call this on the samples of a single curve segment/shape,
+ * never on straight-line geometry. A sampling spike is geometrically
+ * indistinguishable from a legitimately long straight segment (e.g. the tall
+ * riser of a steep staircase), so applying this to L/H/V polylines would drop
+ * real corners and collapse them into straight lines.
  */
 function dropChordSpikes(pts: Polyline): Polyline {
   if (pts.length < 4) return pts;
@@ -483,12 +497,14 @@ export async function flattenSvg(svgText: string, opts: FlattenOptions = {}): Pr
     }
 
     // Geometry of an invisible element is dropped, but we still recurse: a
-    // hidden group can contain a child that turns visibility back on.
+    // hidden group can contain a child that turns visibility back on. Spike
+    // filtering already happened at the curve samplers (sampleSeg/samplePath),
+    // so straight-line geometry — including steep staircases whose risers are
+    // far longer than the median chord — is emitted exactly as authored.
     if (nodeVisible) {
       for (const pl of raw) {
         if (pl.length < 2) continue;
-        const transformed = pl.map((p) => apply(t, p));
-        polylines.push(dropChordSpikes(transformed));
+        polylines.push(pl.map((p) => apply(t, p)));
       }
     }
 

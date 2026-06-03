@@ -208,7 +208,7 @@ button + button { margin-left: 6px; }
 .subhead { font-size: 13px; font-weight: 500; color: #aaa; margin: 12px 0 6px; }
 
 /* SVG layer tree */
-.svg-tree { border: 1px solid #333; border-radius: 4px; overflow-y: auto; max-height: 260px; font-size: 12px; }
+.svg-tree { border: 1px solid #333; border-radius: 4px; overflow-y: auto; max-height: 260px; font-size: 12px; margin-bottom: 8px; }
 .tree-row { display: flex; align-items: center; gap: 4px; padding: 3px 4px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
 .tree-row:last-child { border-bottom: none; }
 .tree-row.tree-hidden { opacity: 0.35; }

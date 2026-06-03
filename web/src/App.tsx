@@ -852,6 +852,39 @@ export default function App() {
           style={{ display: "none" }}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
         />
+
+        {svgTree.length > 0 && !testPatternOn && (
+          <SvgTree
+            nodes={svgTree}
+            expanded={expandedKeys}
+            hidden={hiddenKeys}
+            labels={layerLabels}
+            colors={layerColors}
+            onExpand={(key) => setExpandedKeys((prev) => {
+              const next = new Set(prev);
+              next.has(key) ? next.delete(key) : next.add(key);
+              return next;
+            })}
+            onHide={(key) => setHiddenKeys((prev) => {
+              const next = new Set(prev);
+              next.has(key) ? next.delete(key) : next.add(key);
+              return next;
+            })}
+            onRename={(key, label) => setLayerLabels((prev) => {
+              const next = { ...prev };
+              if (label) next[key] = label;
+              else delete next[key];
+              return next;
+            })}
+            onColor={(key, color) => setLayerColors((prev) => {
+              const next = { ...prev };
+              if (color) next[key] = color;
+              else delete next[key];
+              return next;
+            })}
+          />
+        )}
+
         <div className="row">
           <label>
             <input
@@ -870,41 +903,6 @@ export default function App() {
             /> Preview as thin black lines
           </label>
         </div>
-
-        {svgTree.length > 0 && !testPatternOn && (
-          <>
-            <h2>Layers</h2>
-            <SvgTree
-              nodes={svgTree}
-              expanded={expandedKeys}
-              hidden={hiddenKeys}
-              labels={layerLabels}
-              colors={layerColors}
-              onExpand={(key) => setExpandedKeys((prev) => {
-                const next = new Set(prev);
-                next.has(key) ? next.delete(key) : next.add(key);
-                return next;
-              })}
-              onHide={(key) => setHiddenKeys((prev) => {
-                const next = new Set(prev);
-                next.has(key) ? next.delete(key) : next.add(key);
-                return next;
-              })}
-              onRename={(key, label) => setLayerLabels((prev) => {
-                const next = { ...prev };
-                if (label) next[key] = label;
-                else delete next[key];
-                return next;
-              })}
-              onColor={(key, color) => setLayerColors((prev) => {
-                const next = { ...prev };
-                if (color) next[key] = color;
-                else delete next[key];
-                return next;
-              })}
-            />
-          </>
-        )}
 
         {displayParsed && (
           <>

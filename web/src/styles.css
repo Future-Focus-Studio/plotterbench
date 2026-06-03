@@ -56,6 +56,9 @@ h2:first-child { margin-top: 0; }
   font-size: 13px;
 }
 .row input[type=number] { width: 80px; flex: 0 0 80px; }
+/* Let the port <select> shrink to the sidebar and ellipsize a long option
+   instead of overflowing (flex items default to min-width:auto = content). */
+.row select { min-width: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
 
 /* Compact two-column field grid (label cell + value cell per row). Shared by
    the Page and Speed sections. */

@@ -819,6 +819,39 @@ export default function App() {
           <div className="field-grid-cell">
             <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
           </div>
+          <div className="field-grid-cell label">Draw (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
+          </div>
+          <div className="field-grid-cell label">Travel (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
+          </div>
+          <div className="field-grid-cell label">Pen-down delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
+          </div>
+          <div className="field-grid-cell label">Pen-down Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
+          </div>
+          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput
+              className="field-input"
+              min="1" step="1" decimals={1}
+              value={penSpeedMmPerMin / 60}
+              onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
+            />
+          </div>
         </div>
 
         <h2>SVG</h2>
@@ -945,43 +978,6 @@ export default function App() {
             </div>
           </div>
         )}
-
-        <h2>Speed</h2>
-        <div className="field-grid">
-          <div className="field-grid-cell label">Draw (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
-          </div>
-          <div className="field-grid-cell label">Travel (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
-          </div>
-          <div className="field-grid-cell label">Pen-down delay (ms)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
-          </div>
-          <div className="field-grid-cell label">Pen-up delay (ms)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
-          </div>
-          <div className="field-grid-cell label">Pen-up Z</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
-          </div>
-          <div className="field-grid-cell label">Pen-down Z</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
-          </div>
-          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput
-              className="field-input"
-              min="1" step="1" decimals={1}
-              value={penSpeedMmPerMin / 60}
-              onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
-            />
-          </div>
-        </div>
 
 
       </aside>

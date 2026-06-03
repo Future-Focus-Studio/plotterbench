@@ -807,39 +807,6 @@ export default function App() {
             <input id="cb-testpattern" className="field-checkbox" type="checkbox"
               checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
           </div>
-          <div className="field-grid-cell label">Draw (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
-          </div>
-          <div className="field-grid-cell label">Travel (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
-          </div>
-          <div className="field-grid-cell label">Pen-down delay (ms)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
-          </div>
-          <div className="field-grid-cell label">Pen-up delay (ms)</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
-          </div>
-          <div className="field-grid-cell label">Pen-up Z</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
-          </div>
-          <div className="field-grid-cell label">Pen-down Z</div>
-          <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
-          </div>
-          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
-          <div className="field-grid-cell">
-            <NumberInput
-              className="field-input"
-              min="1" step="1" decimals={1}
-              value={penSpeedMmPerMin / 60}
-              onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
-            />
-          </div>
         </div>
 
         <h2>SVG</h2>
@@ -967,6 +934,30 @@ export default function App() {
           </div>
         )}
 
+        {displayParsed && (
+          <div className={testPatternOn ? "dimmed" : undefined}>
+            <h2>Path modifications</h2>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
+              <div className="field-grid-cell">
+                <input id="cb-reverse" className="field-checkbox" type="checkbox"
+                  checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
+              <div className="field-grid-cell">
+                <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
+              <div className="field-grid-cell">
+                <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
+              <div className="field-grid-cell">
+                <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
+              </div>
+            </div>
+          </div>
+        )}
 
       </aside>
 
@@ -1001,6 +992,75 @@ export default function App() {
       </main>
 
       <aside className="sidebar sidebar-right">
+        {displayParsed && (
+          <div className={testPatternOn ? "dimmed" : undefined}>
+            <h2>Optimization</h2>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
+              <div className="field-grid-cell">
+                <input id="cb-optimize" className="field-checkbox" type="checkbox"
+                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
+              </div>
+            </div>
+            {optimizePaths && (
+              <div className="optimize-summary">
+                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
+                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
+              </div>
+            )}
+          </div>
+        )}
+
+        <h2>Speed</h2>
+        <div className="field-grid">
+          <div className="field-grid-cell label">Draw (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
+          </div>
+          <div className="field-grid-cell label">Travel (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
+          </div>
+          <div className="field-grid-cell label">Pen-down delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
+          </div>
+          <div className="field-grid-cell label">Pen-down Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
+          </div>
+          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput
+              className="field-input"
+              min="1" step="1" decimals={1}
+              value={penSpeedMmPerMin / 60}
+              onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
+            />
+          </div>
+        </div>
+
+        <h2>Instructions</h2>
+        <div className="instr-panel">
+          <InstructionList
+            polylines={plotPolylines}
+            currentIndex={progress?.polylineIndex ?? 0}
+            drawing={plotting || paused}
+            hoveredIndex={hoveredPolyline}
+            onHover={setHoveredPolyline}
+            onRewind={(i) => plot(i)}
+            rewindDisabled={!conn.connected || !displayParsed || plotting || paused}
+          />
+        </div>
+
         <h2>Controls</h2>
         <div className="row">
           <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
@@ -1022,48 +1082,6 @@ export default function App() {
             Set origin here
           </button>
         </div>
-
-        {displayParsed && (
-          <div className={testPatternOn ? "dimmed" : undefined}>
-            <h2>Path modifications</h2>
-            <div className="field-grid">
-              <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
-              <div className="field-grid-cell">
-                <input id="cb-reverse" className="field-checkbox" type="checkbox"
-                  checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} />
-              </div>
-              <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
-              <div className="field-grid-cell">
-                <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
-              </div>
-              <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
-              <div className="field-grid-cell">
-                <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
-              </div>
-              <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
-              <div className="field-grid-cell">
-                <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
-              </div>
-            </div>
-
-            <h2>Optimization</h2>
-            <div className="field-grid">
-              <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
-              <div className="field-grid-cell">
-                <input id="cb-optimize" className="field-checkbox" type="checkbox"
-                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
-              </div>
-            </div>
-            {optimizePaths && (
-              <div className="optimize-summary">
-                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
-                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
-              </div>
-            )}
-          </div>
-        )}
-
-        <h2>Plot</h2>
         <div className="row">
           {!plotting && !paused ? (
             <button onClick={() => plot(0)} disabled={!conn.connected || !displayParsed}>Plot</button>
@@ -1088,19 +1106,6 @@ export default function App() {
           </>
         )}
         {status && <div className={`status ${status.kind === "error" ? "error" : status.kind === "warn" ? "warn" : ""}`}>{status.msg}</div>}
-
-        <h2>Instructions</h2>
-        <div className="instr-panel">
-          <InstructionList
-            polylines={plotPolylines}
-            currentIndex={progress?.polylineIndex ?? 0}
-            drawing={plotting || paused}
-            hoveredIndex={hoveredPolyline}
-            onHover={setHoveredPolyline}
-            onRewind={(i) => plot(i)}
-            rewindDisabled={!conn.connected || !displayParsed || plotting || paused}
-          />
-        </div>
       </aside>
     </div>
   );

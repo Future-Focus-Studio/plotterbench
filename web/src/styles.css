@@ -198,12 +198,6 @@ button.danger { color: #e88; border-color: #d66; }
 button:disabled { background: transparent; color: #555; border-color: #3a3a3a; cursor: not-allowed; }
 button + button { margin-left: 6px; }
 
-/* Buttons inside the Controls two-column grid keep the filled style. */
-.ctrl-row button { background: #2a6; color: #fff; border-color: transparent; }
-.ctrl-row button.secondary { background: #444; color: #fff; }
-.ctrl-row button.danger { background: #c33; color: #fff; }
-.ctrl-row button:disabled { background: #333; color: #777; border-color: transparent; }
-
 /* A .row whose two buttons should split 50/50. */
 .row-2col > button { flex: 1 1 0; min-width: 0; margin: 0; }
 

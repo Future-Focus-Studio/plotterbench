@@ -926,18 +926,11 @@ export default function App() {
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.1" live value={heightMm} onCommit={setHeightLocked} />
               </div>
-            </div>
-            <div className="field-grid">
               <label className="field-grid-cell label" htmlFor="cb-lockcenter">Lock SVG to center</label>
               <div className="field-grid-cell">
                 <input id="cb-lockcenter" className="field-checkbox" type="checkbox"
                   checked={lockCenter} onChange={(e) => setLockCenter(e.target.checked)} />
               </div>
-            </div>
-            <div className="row">
-              <button className="secondary" onClick={rotate90}>Rotate 90°</button>
-            </div>
-            <div className="field-grid">
               <div className="field-grid-cell label">Offset X (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetX} onCommit={setOffsetX} disabled={lockCenter} />
@@ -946,6 +939,9 @@ export default function App() {
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter} />
               </div>
+            </div>
+            <div className="row">
+              <button className="secondary" onClick={rotate90}>Rotate 90°</button>
             </div>
           </div>
         )}

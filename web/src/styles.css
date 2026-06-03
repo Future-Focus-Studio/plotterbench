@@ -150,7 +150,8 @@ label.field-grid-cell { cursor: pointer; }
 .page-bg-swatch::-webkit-color-swatch-wrapper { padding: 0; }
 .page-bg-swatch::-webkit-color-swatch { border: none; border-radius: 3px; }
 .page-bg-swatch::-moz-color-swatch { border: none; border-radius: 3px; }
-.page-bg-reset {
+.page-bg-reset,
+.field-icon-btn {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -163,7 +164,8 @@ label.field-grid-cell { cursor: pointer; }
   cursor: pointer;
   line-height: 0;
 }
-.page-bg-reset:hover { color: #eee; }
+.page-bg-reset:hover,
+.field-icon-btn:hover { color: #eee; }
 
 button {
   background: #2a6;
@@ -179,6 +181,12 @@ button.secondary { background: #444; }
 button.danger { background: #c33; }
 button:disabled { background: #333; color: #777; cursor: not-allowed; }
 button + button { margin-left: 6px; }
+
+/* Controls section: each button ~50% width in equal rows (not the field grid). */
+.ctrl-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.ctrl-row > * { flex: 1 1 0; min-width: 0; }
+.ctrl-row button { flex: 1 1 0; margin: 0; }
+.ctrl-plot { display: flex; gap: 8px; }
 
 .status { font-size: 12px; color: #8c8; margin-top: 8px; }
 .status.error { color: #f66; }

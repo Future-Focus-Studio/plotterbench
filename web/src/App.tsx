@@ -244,8 +244,8 @@ function fmtMm(mm: number): string {
 
 function OptimizeSummary({ stats }: { stats: OptimizeStats }) {
   const {
-    originalCount, optimizedCount, reversed, merged,
-    originalTravel, optimizedTravel, drawDistance,
+    originalCount, optimizedCount, merged,
+    originalTravel, optimizedTravel,
   } = stats;
   const travelSaved = originalTravel - optimizedTravel;
   const pct = originalTravel > 0 ? (travelSaved / originalTravel) * 100 : 0;
@@ -262,10 +262,6 @@ function OptimizeSummary({ stats }: { stats: OptimizeStats }) {
         <span>{merged}</span>
       </div>
       <div className="opt-row">
-        <span>Reversed</span>
-        <span>{reversed}</span>
-      </div>
-      <div className="opt-row">
         <span>Pen-up travel</span>
         <span>{fmtMm(originalTravel)} → {fmtMm(optimizedTravel)}</span>
       </div>
@@ -275,10 +271,6 @@ function OptimizeSummary({ stats }: { stats: OptimizeStats }) {
           <span>{fmtMm(travelSaved)} ({pct.toFixed(1)}%)</span>
         </div>
       )}
-      <div className="opt-row muted">
-        <span>Draw distance</span>
-        <span>{fmtMm(drawDistance)}</span>
-      </div>
     </div>
   );
 }
@@ -895,17 +887,14 @@ export default function App() {
           </div>
         )}
 
-        <div className="field-grid">
-          <label className="field-grid-cell label" htmlFor="cb-previewthin">Preview as thin black lines</label>
-          <div className="field-grid-cell">
-            <input id="cb-previewthin" className="field-checkbox" type="checkbox"
-              checked={previewThinLines} onChange={(e) => setPreviewThinLines(e.target.checked)} />
-          </div>
-        </div>
-
         {parsed && (
           <div className={testPatternOn ? "dimmed" : undefined}>
             <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-previewthin">Preview as thin black lines</label>
+              <div className="field-grid-cell">
+                <input id="cb-previewthin" className="field-checkbox" type="checkbox"
+                  checked={previewThinLines} onChange={(e) => setPreviewThinLines(e.target.checked)} />
+              </div>
               <div className="field-grid-cell label">Width (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.1" live value={widthMm} onCommit={setWidthLocked} />
@@ -927,9 +916,12 @@ export default function App() {
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter} />
               </div>
-            </div>
-            <div className="row">
-              <button className="secondary" onClick={rotate90}>Rotate 90°</button>
+              <div className="field-grid-cell label">Rotate 90 degrees</div>
+              <div className="field-grid-cell">
+                <button className="field-icon-btn" onClick={rotate90} title="Rotate 90°" aria-label="Rotate 90 degrees">
+                  <RefreshIcon />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1011,7 +1003,7 @@ export default function App() {
           </div>
         )}
 
-        <h2>Speed</h2>
+        <h2>Pen speed</h2>
         <div className="field-grid">
           <div className="field-grid-cell label">Draw (mm/s)</div>
           <div className="field-grid-cell">
@@ -1062,15 +1054,7 @@ export default function App() {
         </div>
 
         <h2>Controls</h2>
-        <div className="row">
-          <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
-          <button className="secondary" onClick={penDown} disabled={!conn.connected}>Pen down</button>
-        </div>
-        <div className="row">
-          <button className="secondary" onClick={home} disabled={!conn.connected}>Go to 0,0</button>
-          <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
-        </div>
-        <div className="row">
+        <div className="ctrl-row">
           <button
             className="secondary"
             onClick={async () => {
@@ -1081,21 +1065,29 @@ export default function App() {
           >
             Set origin here
           </button>
+          <button className="secondary" onClick={home} disabled={!conn.connected}>Go to 0,0</button>
         </div>
-        <div className="row">
-          {!plotting && !paused ? (
-            <button onClick={() => plot(0)} disabled={!conn.connected || !displayParsed}>Plot</button>
-          ) : paused ? (
-            <>
-              <button onClick={resume}>Resume</button>
-              <button className="danger" onClick={cancel}>Cancel</button>
-            </>
-          ) : (
-            <>
-              <button className="secondary" onClick={pause}>Pause</button>
-              <button className="danger" onClick={cancel}>Cancel</button>
-            </>
-          )}
+        <div className="ctrl-row">
+          <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
+          <button className="secondary" onClick={penDown} disabled={!conn.connected}>Pen down</button>
+        </div>
+        <div className="ctrl-row">
+          <div className="ctrl-plot">
+            {!plotting && !paused ? (
+              <button onClick={() => plot(0)} disabled={!conn.connected || !displayParsed}>Plot</button>
+            ) : paused ? (
+              <>
+                <button onClick={resume}>Resume</button>
+                <button className="danger" onClick={cancel}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <button className="secondary" onClick={pause}>Pause</button>
+                <button className="danger" onClick={cancel}>Cancel</button>
+              </>
+            )}
+          </div>
+          <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
         </div>
         {progress && (
           <>

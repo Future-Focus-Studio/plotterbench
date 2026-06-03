@@ -30,7 +30,6 @@ interface SavedSettings {
   fileName: string;
   widthMm: number;
   heightMm: number;
-  lockAspect: boolean;
   lockCenter: boolean;
   offsetX: number;
   offsetY: number;
@@ -62,7 +61,6 @@ const DEFAULTS: SavedSettings = {
   fileName: "",
   widthMm: 100,
   heightMm: 100,
-  lockAspect: true,
   lockCenter: false,
   offsetX: 10,
   offsetY: 10,
@@ -306,7 +304,7 @@ export default function App() {
   const [settings, setSetting] = useSettings();
   const {
     selectedPort, pageW, pageH, pageBackground, parsed, fileName,
-    widthMm, heightMm, lockAspect, lockCenter, offsetX, offsetY,
+    widthMm, heightMm, lockCenter, offsetX, offsetY,
     drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs,
     penUpZ, penDownZ, penSpeedMmPerMin,
     flipX, flipY, swapXY, optimizePaths, reversePaths,
@@ -325,7 +323,6 @@ export default function App() {
   const setFileName = (v: SetArg<string>) => setSetting("fileName", v);
   const setWidthMm = (v: SetArg<number>) => setSetting("widthMm", v);
   const setHeightMm = (v: SetArg<number>) => setSetting("heightMm", v);
-  const setLockAspect = (v: SetArg<boolean>) => setSetting("lockAspect", v);
   const setLockCenter = (v: SetArg<boolean>) => setSetting("lockCenter", v);
   const setOffsetX = (v: SetArg<number>) => setSetting("offsetX", v);
   const setOffsetY = (v: SetArg<number>) => setSetting("offsetY", v);
@@ -558,14 +555,16 @@ export default function App() {
     };
   }, [onFile]);
 
+  // Aspect ratio is always locked to the source SVG — width and height stay
+  // proportional.
   const aspect = parsed ? parsed.naturalWidthMm / parsed.naturalHeightMm : 1;
   const setWidthLocked = (w: number) => {
     setWidthMm(w);
-    if (lockAspect && aspect) setHeightMm(Math.round((w / aspect) * 10) / 10);
+    if (aspect) setHeightMm(Math.round((w / aspect) * 10) / 10);
   };
   const setHeightLocked = (h: number) => {
     setHeightMm(h);
-    if (lockAspect && aspect) setWidthMm(Math.round(h * aspect * 10) / 10);
+    if (aspect) setWidthMm(Math.round(h * aspect * 10) / 10);
   };
 
   const testPatternParsed = useMemo<ParsedSvg | null>(
@@ -929,11 +928,6 @@ export default function App() {
               </div>
             </div>
             <div className="field-grid">
-              <label className="field-grid-cell label" htmlFor="cb-lockaspect">Lock aspect</label>
-              <div className="field-grid-cell">
-                <input id="cb-lockaspect" className="field-checkbox" type="checkbox"
-                  checked={lockAspect} onChange={(e) => setLockAspect(e.target.checked)} />
-              </div>
               <label className="field-grid-cell label" htmlFor="cb-lockcenter">Lock SVG to center</label>
               <div className="field-grid-cell">
                 <input id="cb-lockcenter" className="field-checkbox" type="checkbox"
@@ -1008,7 +1002,7 @@ export default function App() {
           offsetXMm={displayOffsetX}
           offsetYMm={displayOffsetY}
           onOffsetChange={(x, y) => { if (testPatternOn || lockCenter) return; setOffsetX(x); setOffsetY(y); }}
-          lockedAspect={lockAspect && displayParsed ? displayParsed.naturalWidthMm / displayParsed.naturalHeightMm : null}
+          lockedAspect={displayParsed ? displayParsed.naturalWidthMm / displayParsed.naturalHeightMm : null}
           onSizeChange={(w, h, ox, oy) => {
             if (testPatternOn) return;
             setWidthMm(Math.round(w * 10) / 10);

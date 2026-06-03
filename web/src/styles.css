@@ -46,8 +46,9 @@ h2:first-child { margin-top: 0; }
 }
 .row input[type=number] { width: 80px; flex: 0 0 80px; }
 
-/* Compact 2x2 grid for page width/height: label cell + value cell per row. */
-.page-dims {
+/* Compact two-column field grid (label cell + value cell per row). Shared by
+   the Page and Speed sections. */
+.field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   border: 1px solid #333;
@@ -55,7 +56,7 @@ h2:first-child { margin-top: 0; }
   overflow: hidden;
   margin-bottom: 8px;
 }
-.page-dims-cell {
+.field-grid-cell {
   display: flex;
   align-items: center;
   padding: 6px 10px;
@@ -64,11 +65,11 @@ h2:first-child { margin-top: 0; }
   border-right: 1px solid #333;
   border-bottom: 1px solid #333;
 }
-.page-dims-cell.label { color: #aaa; background: #1d1d1d; text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; }
+.field-grid-cell.label { color: #aaa; background: #1d1d1d; text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; }
 /* Drop the outer borders: right edge of the value column, bottom of last row. */
-.page-dims-cell:nth-child(2n) { border-right: none; }
-.page-dims-cell:nth-last-child(-n+2) { border-bottom: none; }
-.page-dim-input {
+.field-grid-cell:nth-child(2n) { border-right: none; }
+.field-grid-cell:nth-last-child(-n+2) { border-bottom: none; }
+.field-input {
   width: 100%;
   background: transparent;
   color: #eee;

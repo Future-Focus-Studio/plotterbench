@@ -762,27 +762,27 @@ export default function App() {
         {conn.connected && <div className="status">Connected {conn.path}{conn.version ? ` · ${conn.version}` : ""}</div>}
 
         <h2>Page</h2>
-        <div className="page-dims">
-          <div className="page-dims-cell label">Width (in)</div>
-          <div className="page-dims-cell">
+        <div className="field-grid">
+          <div className="field-grid-cell label">Width (in)</div>
+          <div className="field-grid-cell">
             <NumberInput
-              className="page-dim-input"
+              className="field-input"
               step="0.01" min="0.1" decimals={2}
               value={mmToIn(pageW)}
               onCommit={(v) => setPageW(inToMm(v))}
             />
           </div>
-          <div className="page-dims-cell label">Height (in)</div>
-          <div className="page-dims-cell">
+          <div className="field-grid-cell label">Height (in)</div>
+          <div className="field-grid-cell">
             <NumberInput
-              className="page-dim-input"
+              className="field-input"
               step="0.01" min="0.1" decimals={2}
               value={mmToIn(pageH)}
               onCommit={(v) => setPageH(inToMm(v))}
             />
           </div>
-          <div className="page-dims-cell label">Background</div>
-          <div className="page-dims-cell page-dims-bg">
+          <div className="field-grid-cell label">Background</div>
+          <div className="field-grid-cell page-dims-bg">
             <input
               type="color"
               className="page-bg-swatch"
@@ -975,37 +975,40 @@ export default function App() {
         )}
 
         <h2>Speed</h2>
-        <div className="row">
-          <label>Draw (mm/s)</label>
-          <NumberInput min="1" value={drawSpeed} onCommit={setDrawSpeed} />
-        </div>
-        <div className="row">
-          <label>Travel (mm/s)</label>
-          <NumberInput min="1" value={travelSpeed} onCommit={setTravelSpeed} />
-        </div>
-        <div className="row">
-          <label>Pen-down delay (ms)</label>
-          <NumberInput min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
-        </div>
-        <div className="row">
-          <label>Pen-up delay (ms)</label>
-          <NumberInput min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
-        </div>
-        <div className="row">
-          <label>Pen-up Z</label>
-          <NumberInput min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
-        </div>
-        <div className="row">
-          <label>Pen-down Z</label>
-          <NumberInput min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
-        </div>
-        <div className="row">
-          <label>Pen speed up/down (mm/s)</label>
-          <NumberInput
-            min="1" step="1" decimals={1}
-            value={penSpeedMmPerMin / 60}
-            onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
-          />
+        <div className="field-grid">
+          <div className="field-grid-cell label">Draw (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
+          </div>
+          <div className="field-grid-cell label">Travel (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
+          </div>
+          <div className="field-grid-cell label">Pen-down delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up delay (ms)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
+          </div>
+          <div className="field-grid-cell label">Pen-up Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
+          </div>
+          <div className="field-grid-cell label">Pen-down Z</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
+          </div>
+          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
+          <div className="field-grid-cell">
+            <NumberInput
+              className="field-input"
+              min="1" step="1" decimals={1}
+              value={penSpeedMmPerMin / 60}
+              onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
+            />
+          </div>
         </div>
 
         <h2>Orientation</h2>

@@ -904,36 +904,6 @@ export default function App() {
           </label>
         </div>
 
-        {displayParsed && (
-          <>
-            <h2>Optimization</h2>
-            <div className="row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={optimizePaths}
-                  onChange={(e) => setOptimizePaths(e.target.checked)}
-                /> Optimize paths
-              </label>
-            </div>
-            <div className="row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={reversePaths}
-                  onChange={(e) => setReversePaths(e.target.checked)}
-                /> Reverse (plot end → start)
-              </label>
-            </div>
-            {optimizePaths && (
-              <div className="optimize-summary">
-                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
-                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
-              </div>
-            )}
-          </>
-        )}
-
         {parsed && !testPatternOn && (
           <>
             <div className="field-grid">
@@ -1084,6 +1054,38 @@ export default function App() {
             Set origin here
           </button>
         </div>
+
+        {displayParsed && (
+          <>
+            <h2>Path modifications</h2>
+            <div className="row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={reversePaths}
+                  onChange={(e) => setReversePaths(e.target.checked)}
+                /> Reverse (plot end → start)
+              </label>
+            </div>
+
+            <h2>Optimization</h2>
+            <div className="row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={optimizePaths}
+                  onChange={(e) => setOptimizePaths(e.target.checked)}
+                /> Optimize paths
+              </label>
+            </div>
+            {optimizePaths && (
+              <div className="optimize-summary">
+                {optimizeLoading && !optimizeStats && <div className="muted">Analyzing…</div>}
+                {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
+              </div>
+            )}
+          </>
+        )}
 
         <h2>Plot</h2>
         <div className="row">

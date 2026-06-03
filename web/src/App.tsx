@@ -27,6 +27,7 @@ interface SavedSettings {
   pageH: number;
   pageBackground: string;
   parsed: ParsedSvg | null;
+  fileName: string;
   widthMm: number;
   heightMm: number;
   lockAspect: boolean;
@@ -58,6 +59,7 @@ const DEFAULTS: SavedSettings = {
   pageH: inToMm(8.5),
   pageBackground: "#ffffff",
   parsed: null,
+  fileName: "",
   widthMm: 100,
   heightMm: 100,
   lockAspect: true,
@@ -303,7 +305,7 @@ export default function App() {
 
   const [settings, setSetting] = useSettings();
   const {
-    selectedPort, pageW, pageH, pageBackground, parsed,
+    selectedPort, pageW, pageH, pageBackground, parsed, fileName,
     widthMm, heightMm, lockAspect, lockCenter, offsetX, offsetY,
     drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs,
     penUpZ, penDownZ, penSpeedMmPerMin,
@@ -320,6 +322,7 @@ export default function App() {
   const setPageH = (v: SetArg<number>) => setSetting("pageH", v);
   const setPageBackground = (v: SetArg<string>) => setSetting("pageBackground", v);
   const setParsed = (v: SetArg<ParsedSvg | null>) => setSetting("parsed", v);
+  const setFileName = (v: SetArg<string>) => setSetting("fileName", v);
   const setWidthMm = (v: SetArg<number>) => setSetting("widthMm", v);
   const setHeightMm = (v: SetArg<number>) => setSetting("heightMm", v);
   const setLockAspect = (v: SetArg<boolean>) => setSetting("lockAspect", v);
@@ -480,8 +483,28 @@ export default function App() {
       return;
     }
     onSvgLoaded(p);
+    setFileName(file.name);
     setStatus({ msg: `Loaded ${file.name} (${p.viewBoxWidth.toFixed(0)}×${p.viewBoxHeight.toFixed(0)} units)`, kind: "ok" });
   }, [onSvgLoaded]);
+
+  // Unload the current SVG and clear everything derived from it.
+  const clearSvg = () => {
+    setParsed(null);
+    setFileName("");
+    setSvgTree([]);
+    setExpandedKeys(new Set());
+    setHiddenKeys(new Set());
+    setLayerLabels({});
+    setLayerColors({});
+    setTestPatternOn(false);
+  };
+
+  // Render the loaded SVG as an <img> data URL for the sidebar thumbnail.
+  // Using <img> (not innerHTML) keeps the untrusted SVG sandboxed — no scripts.
+  const thumbUrl = useMemo(
+    () => (parsed ? `data:image/svg+xml;utf8,${encodeURIComponent(parsed.text)}` : null),
+    [parsed],
+  );
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
@@ -779,15 +802,49 @@ export default function App() {
         </div>
 
         <h2>SVG</h2>
-        <div
-          className={`file-drop${dragHover ? " hover" : ""}`}
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragHover(true); }}
-          onDragLeave={() => setDragHover(false)}
-          onDrop={onDrop}
-        >
-          {parsed ? "Drop to replace · click to browse" : "Drop SVG here · click to browse"}
-        </div>
+        {parsed ? (
+          <div
+            className={`svg-card${dragHover ? " hover" : ""}`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragHover(true); }}
+            onDragLeave={() => setDragHover(false)}
+            onDrop={onDrop}
+            title="Click or drop to replace"
+          >
+            {thumbUrl && (
+              <img
+                className="svg-thumb"
+                src={thumbUrl}
+                alt=""
+                style={{ background: pageBackground }}
+              />
+            )}
+            <div className="svg-card-meta">
+              <span className="svg-filename" title={fileName || undefined}>
+                {fileName || "Untitled.svg"}
+              </span>
+              <span className="svg-subline">
+                {Math.round(parsed.naturalWidthMm)} × {Math.round(parsed.naturalHeightMm)} mm
+              </span>
+            </div>
+            <button
+              className="svg-remove"
+              onClick={(e) => { e.stopPropagation(); clearSvg(); }}
+              title="Remove SVG"
+              aria-label="Remove SVG"
+            >✕</button>
+          </div>
+        ) : (
+          <div
+            className={`file-drop${dragHover ? " hover" : ""}`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragHover(true); }}
+            onDragLeave={() => setDragHover(false)}
+            onDrop={onDrop}
+          >
+            Drop SVG here · click to browse
+          </div>
+        )}
         <input
           ref={fileInputRef}
           type="file"

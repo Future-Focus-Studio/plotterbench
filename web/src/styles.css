@@ -137,6 +137,48 @@ button + button { margin-left: 6px; }
 }
 .file-drop.hover { border-color: #2a6; color: #2a6; }
 
+/* Loaded-SVG card: thumbnail + filename, click/drop to replace, X to remove. */
+.svg-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #1a1a1a;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.svg-card.hover { border-color: #2a6; }
+.svg-thumb {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.svg-card-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.svg-filename {
+  font-size: 13px;
+  color: #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.svg-subline { font-size: 11px; color: #777; }
+.svg-remove {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.svg-remove:hover { color: #f66; }
+
 .progress-bar {
   width: 100%;
   height: 6px;

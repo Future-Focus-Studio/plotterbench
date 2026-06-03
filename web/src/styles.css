@@ -79,6 +79,9 @@ h2:first-child { margin-top: 0; }
   outline: none;
 }
 .field-input:disabled { color: #555; cursor: not-allowed; }
+/* Checkbox in a field-grid value cell; its label cell is a clickable <label>. */
+.field-checkbox { width: 14px; height: 14px; margin: 0; accent-color: #2a6; cursor: pointer; }
+label.field-grid-cell { cursor: pointer; }
 .page-dims-bg { gap: 8px; }
 .page-bg-swatch {
   flex: 1;
@@ -209,15 +212,16 @@ button + button { margin-left: 6px; }
 
 /* SVG layer tree */
 .svg-tree { border: 1px solid #333; border-radius: 4px; overflow-y: auto; max-height: 260px; font-size: 12px; margin-bottom: 8px; }
-.tree-row { display: flex; align-items: center; gap: 4px; padding: 3px 4px; border-bottom: 1px solid #2a2a2a; color: #ccc; user-select: none; -webkit-user-select: none; }
+.tree-row { display: flex; align-items: center; gap: 4px; padding: 3px 4px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
 .tree-row:last-child { border-bottom: none; }
 .tree-row.tree-hidden { opacity: 0.35; }
 .tree-row-toggle { cursor: pointer; }
 .tree-row-toggle:hover { background: #1a1a1a; }
-.tree-prefix { flex-shrink: 0; color: #555; font-family: monospace; white-space: pre; }
+.tree-chevron { width: 14px; flex-shrink: 0; color: #888; user-select: none; }
+.tree-row-toggle .tree-chevron { color: #aaa; }
 .tree-tag { color: #555; flex-shrink: 0; font-size: 10px; font-family: monospace; }
 .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; }
-.tree-rename { flex: 1; margin-left: 4px; min-width: 0; font-size: 12px; padding: 1px 4px; background: #1a1a1a; color: #eee; border: 1px solid #444; border-radius: 3px; user-select: text; -webkit-user-select: text; }
+.tree-rename { flex: 1; margin-left: 4px; min-width: 0; font-size: 12px; padding: 1px 4px; background: #1a1a1a; color: #eee; border: 1px solid #444; border-radius: 3px; }
 .tree-icon-btn { background: none; border: none; padding: 0 2px; cursor: pointer; color: #888; display: flex; align-items: center; flex-shrink: 0; line-height: 1; }
 .tree-icon-btn:hover { color: #eee; }
 .tree-row.tree-hidden .tree-icon-btn { color: #555; }

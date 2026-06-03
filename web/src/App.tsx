@@ -885,23 +885,17 @@ export default function App() {
           />
         )}
 
-        <div className="row">
-          <label>
-            <input
-              type="checkbox"
-              checked={testPatternOn}
-              onChange={(e) => setTestPatternOn(e.target.checked)}
-            /> Show test pattern
-          </label>
-        </div>
-        <div className="row">
-          <label>
-            <input
-              type="checkbox"
-              checked={previewThinLines}
-              onChange={(e) => setPreviewThinLines(e.target.checked)}
-            /> Preview as thin black lines
-          </label>
+        <div className="field-grid">
+          <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
+          <div className="field-grid-cell">
+            <input id="cb-testpattern" className="field-checkbox" type="checkbox"
+              checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-previewthin">Preview as thin black lines</label>
+          <div className="field-grid-cell">
+            <input id="cb-previewthin" className="field-checkbox" type="checkbox"
+              checked={previewThinLines} onChange={(e) => setPreviewThinLines(e.target.checked)} />
+          </div>
         </div>
 
         {parsed && !testPatternOn && (
@@ -916,19 +910,17 @@ export default function App() {
                 <NumberInput className="field-input" step="0.1" live value={heightMm} onCommit={setHeightLocked} />
               </div>
             </div>
-            <div className="row">
-              <label>
-                <input type="checkbox" checked={lockAspect} onChange={(e) => setLockAspect(e.target.checked)} /> Lock aspect
-              </label>
-            </div>
-            <div className="row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={lockCenter}
-                  onChange={(e) => setLockCenter(e.target.checked)}
-                /> Lock SVG to center
-              </label>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-lockaspect">Lock aspect</label>
+              <div className="field-grid-cell">
+                <input id="cb-lockaspect" className="field-checkbox" type="checkbox"
+                  checked={lockAspect} onChange={(e) => setLockAspect(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-lockcenter">Lock SVG to center</label>
+              <div className="field-grid-cell">
+                <input id="cb-lockcenter" className="field-checkbox" type="checkbox"
+                  checked={lockCenter} onChange={(e) => setLockCenter(e.target.checked)} />
+              </div>
             </div>
             <div className="row">
               <button className="secondary" onClick={rotate90}>Rotate 90°</button>
@@ -984,20 +976,19 @@ export default function App() {
         </div>
 
         <h2>Orientation</h2>
-        <div className="row">
-          <label>
-            <input type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} /> Flip X
-          </label>
-        </div>
-        <div className="row">
-          <label>
-            <input type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} /> Flip Y
-          </label>
-        </div>
-        <div className="row">
-          <label>
-            <input type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} /> Swap X/Y
-          </label>
+        <div className="field-grid">
+          <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
+          <div className="field-grid-cell">
+            <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
+          <div className="field-grid-cell">
+            <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
+          <div className="field-grid-cell">
+            <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
+          </div>
         </div>
 
       </aside>
@@ -1058,25 +1049,21 @@ export default function App() {
         {displayParsed && (
           <>
             <h2>Path modifications</h2>
-            <div className="row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={reversePaths}
-                  onChange={(e) => setReversePaths(e.target.checked)}
-                /> Reverse (plot end → start)
-              </label>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
+              <div className="field-grid-cell">
+                <input id="cb-reverse" className="field-checkbox" type="checkbox"
+                  checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} />
+              </div>
             </div>
 
             <h2>Optimization</h2>
-            <div className="row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={optimizePaths}
-                  onChange={(e) => setOptimizePaths(e.target.checked)}
-                /> Optimize paths
-              </label>
+            <div className="field-grid">
+              <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
+              <div className="field-grid-cell">
+                <input id="cb-optimize" className="field-checkbox" type="checkbox"
+                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
+              </div>
             </div>
             {optimizePaths && (
               <div className="optimize-summary">

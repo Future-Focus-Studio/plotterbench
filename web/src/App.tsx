@@ -807,18 +807,6 @@ export default function App() {
             <input id="cb-testpattern" className="field-checkbox" type="checkbox"
               checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
           </div>
-          <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
-          <div className="field-grid-cell">
-            <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
-          </div>
-          <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
-          <div className="field-grid-cell">
-            <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
-          </div>
-          <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
-          <div className="field-grid-cell">
-            <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
-          </div>
           <div className="field-grid-cell label">Draw (mm/s)</div>
           <div className="field-grid-cell">
             <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
@@ -1043,6 +1031,18 @@ export default function App() {
               <div className="field-grid-cell">
                 <input id="cb-reverse" className="field-checkbox" type="checkbox"
                   checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
+              <div className="field-grid-cell">
+                <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
+              <div className="field-grid-cell">
+                <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
+              </div>
+              <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
+              <div className="field-grid-cell">
+                <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
               </div>
             </div>
 

@@ -182,11 +182,12 @@ button.danger { background: #c33; }
 button:disabled { background: #333; color: #777; cursor: not-allowed; }
 button + button { margin-left: 6px; }
 
-/* Controls section: each button ~50% width in equal rows (not the field grid). */
-.ctrl-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.ctrl-row > * { flex: 1 1 0; min-width: 0; }
-.ctrl-row button { flex: 1 1 0; margin: 0; }
+/* Controls section: two equal 50% columns per row (not the field grid). */
+.ctrl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.ctrl-row > * { min-width: 0; }
+.ctrl-row > button { width: 100%; margin: 0; }
 .ctrl-plot { display: flex; gap: 8px; }
+.ctrl-plot > button { flex: 1 1 0; min-width: 0; margin: 0; }
 
 .status { font-size: 12px; color: #8c8; margin-top: 8px; }
 .status.error { color: #f66; }

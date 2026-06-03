@@ -801,6 +801,27 @@ export default function App() {
           </div>
         </div>
 
+        <h2>Calibration</h2>
+        <div className="field-grid">
+          <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
+          <div className="field-grid-cell">
+            <input id="cb-testpattern" className="field-checkbox" type="checkbox"
+              checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
+          <div className="field-grid-cell">
+            <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
+          <div className="field-grid-cell">
+            <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
+          </div>
+          <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
+          <div className="field-grid-cell">
+            <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
+          </div>
+        </div>
+
         <h2>SVG</h2>
         {parsed ? (
           <div
@@ -853,7 +874,8 @@ export default function App() {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
         />
 
-        {svgTree.length > 0 && !testPatternOn && (
+        {svgTree.length > 0 && (
+          <div className={testPatternOn ? "dimmed" : undefined}>
           <SvgTree
             nodes={svgTree}
             expanded={expandedKeys}
@@ -883,14 +905,10 @@ export default function App() {
               return next;
             })}
           />
+          </div>
         )}
 
         <div className="field-grid">
-          <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
-          <div className="field-grid-cell">
-            <input id="cb-testpattern" className="field-checkbox" type="checkbox"
-              checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
-          </div>
           <label className="field-grid-cell label" htmlFor="cb-previewthin">Preview as thin black lines</label>
           <div className="field-grid-cell">
             <input id="cb-previewthin" className="field-checkbox" type="checkbox"
@@ -898,8 +916,8 @@ export default function App() {
           </div>
         </div>
 
-        {parsed && !testPatternOn && (
-          <>
+        {parsed && (
+          <div className={testPatternOn ? "dimmed" : undefined}>
             <div className="field-grid">
               <div className="field-grid-cell label">Width (mm)</div>
               <div className="field-grid-cell">
@@ -935,7 +953,7 @@ export default function App() {
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter} />
               </div>
             </div>
-          </>
+          </div>
         )}
 
         <h2>Speed</h2>
@@ -975,21 +993,6 @@ export default function App() {
           </div>
         </div>
 
-        <h2>Orientation</h2>
-        <div className="field-grid">
-          <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
-          <div className="field-grid-cell">
-            <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
-          </div>
-          <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
-          <div className="field-grid-cell">
-            <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
-          </div>
-          <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
-          <div className="field-grid-cell">
-            <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
-          </div>
-        </div>
 
       </aside>
 
@@ -1047,7 +1050,7 @@ export default function App() {
         </div>
 
         {displayParsed && (
-          <>
+          <div className={testPatternOn ? "dimmed" : undefined}>
             <h2>Path modifications</h2>
             <div className="field-grid">
               <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
@@ -1071,7 +1074,7 @@ export default function App() {
                 {optimizeStats && <OptimizeSummary stats={optimizeStats} />}
               </div>
             )}
-          </>
+          </div>
         )}
 
         <h2>Plot</h2>

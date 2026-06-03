@@ -82,6 +82,8 @@ h2:first-child { margin-top: 0; }
 /* Checkbox in a field-grid value cell; its label cell is a clickable <label>. */
 .field-checkbox { width: 14px; height: 14px; margin: 0; accent-color: #2a6; cursor: pointer; }
 label.field-grid-cell { cursor: pointer; }
+/* Grayed-out, non-interactive controls (e.g. while the test pattern is shown). */
+.dimmed { opacity: 0.4; pointer-events: none; }
 .page-dims-bg { gap: 8px; }
 .page-bg-swatch {
   flex: 1;

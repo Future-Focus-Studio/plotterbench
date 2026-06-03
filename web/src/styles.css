@@ -79,8 +79,44 @@ h2:first-child { margin-top: 0; }
   outline: none;
 }
 .field-input:disabled { color: #555; cursor: not-allowed; }
-/* Checkbox in a field-grid value cell; its label cell is a clickable <label>. */
-.field-checkbox { width: 14px; height: 14px; margin: 0; accent-color: #2a6; cursor: pointer; }
+/* Sliding toggle in a field-grid value cell; its label cell is a clickable
+   <label>. A rounded-rectangle track with a square (rounded) knob that slides
+   left (off) → right (on). */
+.field-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #3a3a3a;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.field-checkbox::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #ccc;
+  transition: left 0.15s, background 0.15s;
+}
+.field-checkbox:checked {
+  background: #2a6;
+  border-color: #2a6;
+}
+.field-checkbox:checked::before {
+  left: 15px;
+  background: #fff;
+}
+.field-checkbox:disabled { opacity: 0.5; cursor: not-allowed; }
 label.field-grid-cell { cursor: pointer; }
 /* Grayed-out, non-interactive controls (e.g. while the test pattern is shown). */
 .dimmed { opacity: 0.4; pointer-events: none; }

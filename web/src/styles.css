@@ -87,7 +87,7 @@ h2:first-child { margin-top: 0; }
   -webkit-appearance: none;
   position: relative;
   flex: 0 0 auto;
-  width: 32px;
+  width: 40px;
   height: 18px;
   margin: 0;
   border: 1px solid #444;
@@ -113,7 +113,7 @@ h2:first-child { margin-top: 0; }
   border-color: #2a6;
 }
 .field-checkbox:checked::before {
-  left: 15px;
+  left: 23px;
   background: #fff;
 }
 .field-checkbox:disabled { opacity: 0.5; cursor: not-allowed; }

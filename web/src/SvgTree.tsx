@@ -179,11 +179,7 @@ function PencilIcon() {
 // ---- Node row ----
 interface RowProps {
   node: SvgTreeNode;
-  /** For each ancestor column, whether to draw a vertical guide ("│") because
-   *  that ancestor has a following sibling. */
-  guides: boolean[];
-  /** Whether this node is the last among its siblings (└ vs ├ connector). */
-  isLast: boolean;
+  depth: number;
   expanded: ReadonlySet<string>;
   hidden: ReadonlySet<string>;
   labels: Readonly<Record<string, string>>;
@@ -194,15 +190,11 @@ interface RowProps {
   onColor: (key: string, color: string) => void;
 }
 
-function NodeRow({ node, guides, isLast, expanded, hidden, labels, colors, onExpand, onHide, onRename, onColor }: RowProps) {
+function NodeRow({ node, depth, expanded, hidden, labels, colors, onExpand, onHide, onRename, onColor }: RowProps) {
   const isExpanded = expanded.has(node.key);
   const isHidden = hidden.has(node.key);
   const hasChildren = node.children.length > 0;
   const displayLabel = labels[node.key] ?? node.label;
-
-  // Terminal-style tree prefix: ancestor guide columns + this node's connector.
-  const prefix =
-    guides.map((g) => (g ? "│  " : "   ")).join("") + (isLast ? "└─ " : "├─ ");
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(displayLabel);
@@ -233,9 +225,15 @@ function NodeRow({ node, guides, isLast, expanded, hidden, labels, colors, onExp
     <>
       <div
         className={`tree-row${isHidden ? " tree-hidden" : ""}${hasChildren ? " tree-row-toggle" : ""}`}
+        style={{ paddingLeft: `${depth * 14 + 4}px` }}
         onClick={() => { if (hasChildren && !editing) onExpand(node.key); }}
       >
-        <span className="tree-prefix">{prefix}</span>
+        <span
+          className="tree-chevron"
+          style={{ visibility: hasChildren ? "visible" : "hidden" }}
+        >
+          {isExpanded ? "▾" : "▸"}
+        </span>
         <span className="tree-tag">{node.tag}</span>
         {editing ? (
           <input
@@ -296,9 +294,8 @@ function NodeRow({ node, guides, isLast, expanded, hidden, labels, colors, onExp
           {isHidden ? <EyeClosed /> : <EyeOpen />}
         </button>
       </div>
-      {hasChildren && isExpanded && node.children.map((child, i) => (
-        <NodeRow key={child.key} node={child}
-          guides={[...guides, !isLast]} isLast={i === node.children.length - 1}
+      {hasChildren && isExpanded && node.children.map((child) => (
+        <NodeRow key={child.key} node={child} depth={depth + 1}
           expanded={expanded} hidden={hidden} labels={labels} colors={colors}
           onExpand={onExpand} onHide={onHide} onRename={onRename} onColor={onColor} />
       ))}
@@ -323,9 +320,8 @@ export default function SvgTree({ nodes, expanded, hidden, labels, colors, onExp
   if (nodes.length === 0) return null;
   return (
     <div className="svg-tree">
-      {nodes.map((node, i) => (
-        <NodeRow key={node.key} node={node}
-          guides={[]} isLast={i === nodes.length - 1}
+      {nodes.map((node) => (
+        <NodeRow key={node.key} node={node} depth={0}
           expanded={expanded} hidden={hidden} labels={labels} colors={colors}
           onExpand={onExpand} onHide={onHide} onRename={onRename} onColor={onColor} />
       ))}

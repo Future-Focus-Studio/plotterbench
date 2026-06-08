@@ -352,6 +352,7 @@ export default function App() {
   const [plotPolylines, setPlotPolylines] = useState<{ x: number; y: number }[][] | null>(null);
   const [hoveredPolyline, setHoveredPolyline] = useState<number | null>(null);
   const [dragHover, setDragHover] = useState(false);
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -797,14 +798,23 @@ export default function App() {
         </div>
 
         <div className="section">
-        <h2>Calibration</h2>
-        <div className="field-grid">
-          <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
-          <div className="field-grid-cell">
-            <input id="cb-testpattern" className="field-checkbox" type="checkbox"
-              checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
+        <h2
+          className="section-head"
+          onClick={() => setCalibrationOpen((o) => !o)}
+          aria-expanded={calibrationOpen}
+        >
+          Calibration
+          <span className={`section-caret${calibrationOpen ? " open" : ""}`} aria-hidden="true">▸</span>
+        </h2>
+        {calibrationOpen && (
+          <div className="field-grid">
+            <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
+            <div className="field-grid-cell">
+              <input id="cb-testpattern" className="field-checkbox" type="checkbox"
+                checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
+            </div>
           </div>
-        </div>
+        )}
         </div>
 
         <div className="section">

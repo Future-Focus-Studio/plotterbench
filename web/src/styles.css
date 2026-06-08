@@ -24,6 +24,11 @@ html, body { height: 100%; overflow: hidden; }
 .section { padding: 14px 16px; border-bottom: 1px solid #333; }
 .section:last-child { border-bottom: 0; }
 .section h2 { margin: 0 0 10px; }
+/* Collapsible section header with a caret that rotates when open. */
+.section-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.section-caret { color: #888; font-size: 9px; transition: transform 0.15s; }
+.section-caret.open { transform: rotate(90deg); }
+.section-head:hover { color: #ccc; }
 .section > *:last-child { margin-bottom: 0; }
 .dimmed > *:last-child { margin-bottom: 0; }
 /* The section that should fill remaining sidebar height and scroll internally. */

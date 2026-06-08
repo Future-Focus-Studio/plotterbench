@@ -46,7 +46,9 @@ interface SavedSettings {
   optimizePaths: boolean;
   reversePaths: boolean;
   previewThinLines: boolean;
-  testPatternOn: boolean;
+  /** Active calibration pattern: "none" (show the loaded SVG) or a pattern id
+   *  like "corners". Add more pattern ids here as they're implemented. */
+  testPattern: string;
   hiddenKeys: string[];
   layerLabels: Record<string, string>;
   layerColors: Record<string, string>;
@@ -77,7 +79,7 @@ const DEFAULTS: SavedSettings = {
   optimizePaths: false,
   reversePaths: false,
   previewThinLines: true,
-  testPatternOn: false,
+  testPattern: "none",
   hiddenKeys: [],
   layerLabels: {},
   layerColors: {},
@@ -300,7 +302,7 @@ export default function App() {
     drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs,
     penUpZ, penDownZ, penSpeedMmPerMin,
     flipX, flipY, swapXY, optimizePaths, reversePaths,
-    previewThinLines, testPatternOn, layerLabels, layerColors,
+    previewThinLines, testPattern, layerLabels, layerColors,
   } = settings;
 
   // Per-field setters preserve the original `useState` ergonomics at call sites
@@ -331,7 +333,10 @@ export default function App() {
   const setOptimizePaths = (v: SetArg<boolean>) => setSetting("optimizePaths", v);
   const setReversePaths = (v: SetArg<boolean>) => setSetting("reversePaths", v);
   const setPreviewThinLines = (v: SetArg<boolean>) => setSetting("previewThinLines", v);
-  const setTestPatternOn = (v: SetArg<boolean>) => setSetting("testPatternOn", v);
+  const setTestPattern = (v: SetArg<string>) => setSetting("testPattern", v);
+  // Any non-"none" pattern means a calibration pattern is showing instead of the
+  // loaded SVG. Existing logic keys off this derived boolean.
+  const testPatternOn = testPattern !== "none";
   const setLayerLabels = (v: SetArg<Record<string, string>>) => setSetting("layerLabels", v);
   const setLayerColors = (v: SetArg<Record<string, string>>) => setSetting("layerColors", v);
 
@@ -352,7 +357,6 @@ export default function App() {
   const [plotPolylines, setPlotPolylines] = useState<{ x: number; y: number }[][] | null>(null);
   const [hoveredPolyline, setHoveredPolyline] = useState<number | null>(null);
   const [dragHover, setDragHover] = useState(false);
-  const [calibrationOpen, setCalibrationOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -486,7 +490,7 @@ export default function App() {
     setHiddenKeys(new Set());
     setLayerLabels({});
     setLayerColors({});
-    setTestPatternOn(false);
+    setTestPattern("none");
   };
 
   // Render the loaded SVG as an <img> data URL for the sidebar thumbnail.
@@ -798,23 +802,21 @@ export default function App() {
         </div>
 
         <div className="section">
-        <h2
-          className="section-head"
-          onClick={() => setCalibrationOpen((o) => !o)}
-          aria-expanded={calibrationOpen}
-        >
-          Calibration
-          <span className={`section-caret${calibrationOpen ? " open" : ""}`} aria-hidden="true">▸</span>
-        </h2>
-        {calibrationOpen && (
-          <div className="field-grid">
-            <label className="field-grid-cell label" htmlFor="cb-testpattern">Show test pattern</label>
-            <div className="field-grid-cell">
-              <input id="cb-testpattern" className="field-checkbox" type="checkbox"
-                checked={testPatternOn} onChange={(e) => setTestPatternOn(e.target.checked)} />
-            </div>
+        <h2>Calibration</h2>
+        <div className="field-grid">
+          <label className="field-grid-cell label" htmlFor="cb-testpattern">Test pattern</label>
+          <div className="field-grid-cell">
+            <select
+              id="cb-testpattern"
+              className="field-select"
+              value={testPattern}
+              onChange={(e) => setTestPattern(e.target.value)}
+            >
+              <option value="none">None</option>
+              <option value="corners">Corner numbers</option>
+            </select>
           </div>
-        )}
+        </div>
         </div>
 
         <div className="section">

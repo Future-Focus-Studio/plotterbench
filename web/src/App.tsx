@@ -267,6 +267,9 @@ const STROKE_GLYPHS: Record<string, [number, number][][]> = {
   "O": [[[0,0],[1,0],[1,1],[0,1],[0,0]]],
   "W": [[[0,0],[0.25,1],[0.5,0.4],[0.75,1],[1,0]]],
   "N": [[[0,1],[0,0],[1,1],[1,0]]],
+  "M": [[[0,1],[0,0],[0.5,0.6],[1,0],[1,1]]],
+  "X": [[[0,0],[1,1]],[[1,0],[0,1]]],
+  "Y": [[[0,0],[0.5,0.55]],[[1,0],[0.5,0.55]],[[0.5,0.55],[0.5,1]]],
 };
 
 /**
@@ -359,6 +362,73 @@ function buildSizeMeasurement(w: number, h: number): string {
 }
 
 /**
+ * Metric scale-calibration pattern: a precise millimetre ruler along each axis,
+ * sharing a common origin corner. Lay a physical ruler/calipers against the
+ * drawn X ruler and the Y ruler separately to confirm that "100 mm drawn =
+ * 100 mm measured" — i.e. that steps-per-mm is correct AND that the X and Y
+ * scales match (an H-bot can be right on one axis and wrong on the other). A
+ * square + inscribed circle give an at-a-glance cross-check: if the scales agree
+ * the square stays square and the circle stays round. Minor tick every 5 mm,
+ * major (labelled) tick every 10 mm; the ruler span is rounded down to a whole
+ * centimetre so the last mark is a clean number to measure to. All geometry is
+ * derived from the page size, so it adapts to any bed.
+ */
+function buildCalibrationRuler(w: number, h: number): string {
+  const els: string[] = [];
+  const line = (x1: number, y1: number, x2: number, y2: number, sw = 0.3) =>
+    `<polyline points="${x1.toFixed(2)},${y1.toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}" fill="none" stroke="black" stroke-width="${sw}"/>`;
+  const rect = (x: number, y: number, rw: number, rh: number, sw = 0.4) =>
+    `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" fill="none" stroke="black" stroke-width="${sw}"/>`;
+
+  const margin = Math.min(12, w * 0.08, h * 0.08);
+  const ox = margin, oy = margin; // shared origin corner for both rulers
+  // Round each span down to a whole 10 mm so the final labelled mark is a clean
+  // decade (e.g. 130, not 134) for the eye to land a ruler on.
+  const spanX = Math.max(10, Math.floor((w - 2 * margin) / 10) * 10);
+  const spanY = Math.max(10, Math.floor((h - 2 * margin) / 10) * 10);
+
+  const MAJOR = 3.5, MINOR = 1.5; // tick lengths, mm
+  const GLYPH = 2; // label glyph height, mm
+
+  // Horizontal (X) ruler, ticks pointing down, labels beneath.
+  els.push(line(ox, oy, ox + spanX, oy, 0.5));
+  for (let mm = 0; mm <= spanX; mm += 5) {
+    const x = ox + mm;
+    const major = mm % 10 === 0;
+    els.push(line(x, oy, x, oy + (major ? MAJOR : MINOR)));
+    if (major) els.push(strokeText(String(mm), x, oy + MAJOR + 1, GLYPH, "middle"));
+  }
+  els.push(strokeText("X", ox + spanX + 3, oy - GLYPH / 2, GLYPH + 1, "start"));
+
+  // Vertical (Y) ruler, ticks pointing right, labels to their right. Skip the
+  // "0" mark — the X ruler already prints it at the shared origin.
+  els.push(line(ox, oy, ox, oy + spanY, 0.5));
+  for (let mm = 0; mm <= spanY; mm += 5) {
+    const y = oy + mm;
+    const major = mm % 10 === 0;
+    els.push(line(ox, y, ox + (major ? MAJOR : MINOR), y));
+    if (major && mm > 0) els.push(strokeText(String(mm), ox + MAJOR + 1.5, y - GLYPH / 2, GLYPH, "start"));
+  }
+  els.push(strokeText("Y", ox - GLYPH, oy + spanY + 3, GLYPH + 1, "middle"));
+
+  // Cross-scale check: a clean-decade square + inscribed circle, placed clear of
+  // the L-shaped rulers (which occupy a ~8 mm band along the top and left).
+  const clearX0 = ox + 9, clearY0 = oy + 9;
+  const clearW = ox + spanX - clearX0;
+  const clearH = oy + spanY - clearY0;
+  const s = Math.min(50, Math.floor(Math.min(clearW, clearH) / 10) * 10);
+  if (s >= 10) {
+    const bx = clearX0 + (clearW - s) / 2;
+    const by = clearY0 + (clearH - s) / 2;
+    els.push(rect(bx, by, s, s, 0.4));
+    els.push(`<circle cx="${(bx + s / 2).toFixed(2)}" cy="${(by + s / 2).toFixed(2)}" r="${(s / 2).toFixed(2)}" fill="none" stroke="black" stroke-width="0.4"/>`);
+    els.push(strokeText(`${s}MM`, bx + s / 2, by + s / 2 - GLYPH / 2, GLYPH, "middle"));
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}mm" height="${h}mm" viewBox="0 0 ${w} ${h}">\n${els.join("\n")}\n</svg>`;
+}
+
+/**
  * Registry of calibration test patterns. Each entry is a label for the dropdown
  * and a builder that turns the current page size (mm) into an SVG string. To add
  * a pattern, write a builder above and add one entry here.
@@ -366,6 +436,7 @@ function buildSizeMeasurement(w: number, h: number): string {
 const TEST_PATTERNS: Record<string, { label: string; build: (w: number, h: number) => string }> = {
   corners: { label: "Corner numbers", build: buildCornerNumbers },
   size: { label: "Size measurement", build: buildSizeMeasurement },
+  ruler: { label: "Calibration ruler (mm)", build: buildCalibrationRuler },
 };
 
 function fmtMm(mm: number): string {

@@ -35,12 +35,19 @@ export interface PlotOptions {
   penDownDelayMs: number;
   /** Max segment length in mm. */
   maxSegmentMm: number;
-  /** Pen "up" Z position (firmware units, 0–10). Smaller = more raised. */
+  /** Pen "up" Z position (firmware units, 0–10). Smaller = more raised.
+   *  DrawCore/iDraw only — the AxiDraw/EBB family lifts with a servo (see
+   *  penUpPercent), so this field is ignored when an EBB driver is active. */
   penUpZ: number;
-  /** Pen "down" Z position. Larger = more pressure. */
+  /** Pen "down" Z position. Larger = more pressure. DrawCore/iDraw only. */
   penDownZ: number;
-  /** Feed rate (mm/min) used when raising/lowering the pen. */
+  /** Feed rate (mm/min) used when raising/lowering the pen. DrawCore/iDraw only. */
   penSpeedMmPerMin: number;
+  /** Pen "up" servo height, 0–100% (0 = fully lowered, 100 = fully raised).
+   *  AxiDraw/EBB family only — ignored when a DrawCore driver is active. */
+  penUpPercent: number;
+  /** Pen "down" servo height, 0–100%. AxiDraw/EBB family only. */
+  penDownPercent: number;
   /** Invert X axis (toggle if +X in software moves pen LEFT on your plotter). */
   flipX: boolean;
   /** Invert Y axis (toggle if +Y moves pen UP on your plotter — fixes upside-down plots). */
@@ -73,6 +80,10 @@ export const DEFAULT_PLOT_OPTIONS: PlotOptions = {
   penUpZ: 0,
   penDownZ: 5,
   penSpeedMmPerMin: 4000,
+  // AxiDraw/EBB servo defaults mirror the stock AxiDraw values (up 60%, down
+  // 30%); they only take effect when an EBB driver is connected.
+  penUpPercent: 60,
+  penDownPercent: 30,
   flipX: true,
   flipY: true,
   swapXY: false,
@@ -93,9 +104,13 @@ export interface OptimizeStats {
   drawDistance: number;
 }
 
+// `driverId`/`driverName` identify the driver bound to the current (or most
+// recently selected) port — e.g. "drawcore" / "ebb". The UI uses driverId to
+// enable only the settings relevant to the connected machine (Z depth for
+// DrawCore, servo height for the AxiDraw/EBB family).
 export type WsEvent =
-  | { type: "hello"; connected: boolean; path?: string | null; version?: string | null }
-  | { type: "connection"; connected: boolean; path?: string; version?: string }
+  | { type: "hello"; connected: boolean; path?: string | null; version?: string | null; driverId?: string; driverName?: string }
+  | { type: "connection"; connected: boolean; path?: string; version?: string; driverId?: string; driverName?: string }
   // Out-of-band messages surfaced in the status area — e.g. an auto-connect
   // happened, or the origin was preserved/re-zeroed on (re)connect.
   | { type: "notice"; level: "info" | "warn"; message: string }

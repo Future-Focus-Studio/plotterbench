@@ -110,13 +110,15 @@ export class Plotter {
   }
 
   async penUp(opts: PlotOptions = DEFAULT_PLOT_OPTIONS) {
-    await this.device.penUp(opts.penUpZ, opts.penSpeedMmPerMin);
+    // Pass the whole options object; the driver reads the fields its hardware
+    // uses (Z depth for DrawCore, servo height for the AxiDraw/EBB family).
+    await this.device.penUp(opts);
     this.currentFeedMmPerMin = opts.penSpeedMmPerMin;
     if (opts.penUpDelayMs > 0) await this.device.dwellSeconds(opts.penUpDelayMs / 1000);
   }
 
   async penDown(opts: PlotOptions = DEFAULT_PLOT_OPTIONS) {
-    await this.device.penDown(opts.penDownZ, opts.penSpeedMmPerMin);
+    await this.device.penDown(opts);
     this.currentFeedMmPerMin = opts.penSpeedMmPerMin;
     if (opts.penDownDelayMs > 0) await this.device.dwellSeconds(opts.penDownDelayMs / 1000);
   }

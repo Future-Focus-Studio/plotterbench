@@ -19,7 +19,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 export const api = {
   ports: () => req<{ ports: PortInfo[]; connected: boolean }>("/api/ports"),
   connect: (path: string) =>
-    req<{ connected: boolean; version: string }>("/api/connect", {
+    req<{ connected: boolean; version: string; driverId?: string; driverName?: string }>("/api/connect", {
       method: "POST",
       body: JSON.stringify({ path }),
     }),

@@ -1,4 +1,4 @@
-import { PlotterDriver, PortInfo } from "./types.js";
+import { PenSettings, PlotterDriver, PortInfo } from "./types.js";
 import { SerialTransport } from "./transport.js";
 
 // DrawCore (Uunatek / iDraw) driver. This firmware is Grbl-derived and exposes
@@ -82,14 +82,16 @@ export class DrawCoreDriver extends SerialTransport implements PlotterDriver {
 
   /**
    * Pen up/down. DrawCore uses Z-axis moves to drive the pen servo.
-   * Larger Z = pen DOWN (more pressure). Defaults match the Uunatek defaults.
+   * Larger Z = pen DOWN (more pressure). Reads the Z-depth + pen-speed fields
+   * from PenSettings; the servo-percent fields are for the EBB family and are
+   * ignored here.
    */
-  async penUp(zUp = 0, speedMmPerMin = 4000) {
-    await this.send(`G90 G1 Z${zUp.toFixed(2)} F${Math.round(speedMmPerMin)}`);
+  async penUp(pen: PenSettings) {
+    await this.send(`G90 G1 Z${pen.penUpZ.toFixed(2)} F${Math.round(pen.penSpeedMmPerMin)}`);
   }
 
-  async penDown(zDown = 5, speedMmPerMin = 4000) {
-    await this.send(`G90 G1 Z${zDown.toFixed(2)} F${Math.round(speedMmPerMin)}`);
+  async penDown(pen: PenSettings) {
+    await this.send(`G90 G1 Z${pen.penDownZ.toFixed(2)} F${Math.round(pen.penSpeedMmPerMin)}`);
   }
 
   /** Absolute linear move to (xMm, yMm) at the current feed rate. */

@@ -32,6 +32,10 @@ export const PlotOptionsSchema = z.object({
   penUpZ: z.number().min(0).max(10),
   penDownZ: z.number().min(0).max(10),
   penSpeedMmPerMin: z.number().min(1).max(50000),
+  // Servo height is a percentage of the pen-lift servo's travel; the EBB
+  // driver maps it onto the firmware's 83.3 ns servo-position units.
+  penUpPercent: z.number().min(0).max(100),
+  penDownPercent: z.number().min(0).max(100),
   flipX: z.boolean(),
   flipY: z.boolean(),
   swapXY: z.boolean(),

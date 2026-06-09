@@ -11,6 +11,10 @@ type ConnectionState = {
   connected: boolean;
   path?: string;
   version?: string;
+  /** Active driver id, e.g. "drawcore" or "ebb". Drives which pen settings are
+   *  relevant (Z depth vs. servo height). */
+  driverId?: string;
+  driverName?: string;
 };
 
 type ProgressState = Extract<WsEvent, { type: "progress" }> | null;
@@ -40,6 +44,8 @@ interface SavedSettings {
   penUpZ: number;
   penDownZ: number;
   penSpeedMmPerMin: number;
+  penUpPercent: number;
+  penDownPercent: number;
   flipX: boolean;
   flipY: boolean;
   swapXY: boolean;
@@ -73,6 +79,8 @@ const DEFAULTS: SavedSettings = {
   penUpZ: 0,
   penDownZ: 5,
   penSpeedMmPerMin: 4000,
+  penUpPercent: 60,
+  penDownPercent: 30,
   flipX: true,
   flipY: true,
   swapXY: false,
@@ -196,7 +204,7 @@ function rotateSvg90(prev: ParsedSvg): ParsedSvg {
   };
 }
 
-function buildTestPatternSvg(w: number, h: number): string {
+function buildCornerNumbers(w: number, h: number): string {
   const sq = 12;
   const inset = 5;
 
@@ -238,6 +246,127 @@ function buildTestPatternSvg(w: number, h: number): string {
     `\n</svg>`
   );
 }
+
+// Minimal single-stroke font for plot labels (no <text> — the flattener can't
+// outline fonts). Each glyph is one or more polylines on a 0..1 box, y down.
+const STROKE_GLYPHS: Record<string, [number, number][][]> = {
+  "0": [[[0,0],[1,0],[1,1],[0,1],[0,0]]],
+  "1": [[[0.5,0],[0.5,1]]],
+  "2": [[[0,0],[1,0],[1,0.5],[0,0.5],[0,1],[1,1]]],
+  "3": [[[0,0],[1,0],[1,1],[0,1]],[[0,0.5],[1,0.5]]],
+  "4": [[[0,0],[0,0.5],[1,0.5]],[[1,0],[1,1]]],
+  "5": [[[1,0],[0,0],[0,0.5],[1,0.5],[1,1],[0,1]]],
+  "6": [[[1,0],[0,0],[0,1],[1,1],[1,0.5],[0,0.5]]],
+  "7": [[[0,0],[1,0],[1,1]]],
+  "8": [[[0,0],[1,0],[1,1],[0,1],[0,0]],[[0,0.5],[1,0.5]]],
+  "9": [[[1,1],[1,0],[0,0],[0,0.5],[1,0.5]]],
+  ".": [[[0.4,1],[0.6,1]]],
+  "U": [[[0,0],[0,1],[1,1],[1,0]]],
+  "P": [[[0,1],[0,0],[1,0],[1,0.5],[0,0.5]]],
+  "D": [[[0,1],[0,0],[0.6,0],[1,0.4],[1,0.6],[0.6,1],[0,1]]],
+  "O": [[[0,0],[1,0],[1,1],[0,1],[0,0]]],
+  "W": [[[0,0],[0.25,1],[0.5,0.4],[0.75,1],[1,0]]],
+  "N": [[[0,1],[0,0],[1,1],[1,0]]],
+};
+
+/**
+ * Render `text` as single-stroke polylines. (x, y) is the top of the text; with
+ * anchor "middle" the run is horizontally centered on x. `size` is the glyph
+ * height in mm; glyphs are 0.6× as wide.
+ */
+function strokeText(
+  text: string,
+  x: number,
+  y: number,
+  size: number,
+  anchor: "start" | "middle" = "start",
+): string {
+  const charW = size * 0.6;
+  const advance = charW + size * 0.25;
+  const totalW = text.length * advance - size * 0.25;
+  const startX = anchor === "middle" ? x - totalW / 2 : x;
+  const out: string[] = [];
+  text.split("").forEach((ch, i) => {
+    const glyph = STROKE_GLYPHS[ch.toUpperCase()];
+    if (!glyph) return;
+    const ox = startX + i * advance;
+    for (const pl of glyph) {
+      const pts = pl
+        .map(([gx, gy]) => `${(ox + gx * charW).toFixed(2)},${(y + gy * size).toFixed(2)}`)
+        .join(" ");
+      out.push(`<polyline points="${pts}" fill="none" stroke="black" stroke-width="0.3"/>`);
+    }
+  });
+  return out.join("\n");
+}
+
+/**
+ * Size-measurement calibration pattern: nested centered circle/squares with a
+ * 1/8" ruler, up/down orientation arrows, and a page-perimeter rectangle whose
+ * dimensions are labelled in inches. All geometry is derived from page size.
+ */
+function buildSizeMeasurement(w: number, h: number): string {
+  const IN = 25.4;
+  const cx = w / 2, cy = h / 2;
+  const els: string[] = [];
+
+  const rect = (x: number, y: number, rw: number, rh: number, sw = 0.4) =>
+    `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" fill="none" stroke="black" stroke-width="${sw}"/>`;
+  const line = (x1: number, y1: number, x2: number, y2: number, sw = 0.3) =>
+    `<polyline points="${x1.toFixed(2)},${y1.toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}" fill="none" stroke="black" stroke-width="${sw}"/>`;
+
+  // Center circle (2" diameter) and concentric 4" + 6" squares.
+  els.push(`<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${(1 * IN).toFixed(2)}" fill="none" stroke="black" stroke-width="0.4"/>`);
+  const s4 = 4 * IN;
+  els.push(rect(cx - s4 / 2, cy - s4 / 2, s4, s4));
+  const s6 = 6 * IN;
+  const x6 = cx - s6 / 2, y6 = cy - s6 / 2;
+  els.push(rect(x6, y6, s6, s6));
+
+  // 1/8" ruler ticks inward along the top and left edges of the 6" square
+  // (longer tick every full inch).
+  const step = IN / 8;
+  for (let i = 0; i <= 6 * 8; i++) {
+    const len = i % 8 === 0 ? 4 : 2;
+    els.push(line(x6 + i * step, y6, x6 + i * step, y6 + len));
+    els.push(line(x6, y6 + i * step, x6 + len, y6 + i * step));
+  }
+
+  // Orientation arrows in the side gaps: UP on the right, DOWN on the left.
+  const arrLen = 2 * IN, headW = 2, headL = 4;
+  const rax = (x6 + s6 + (w - IN)) / 2; // centered between the square and perimeter
+  const lax = (IN + x6) / 2;
+  // right: arrow pointing up
+  els.push(line(rax, cy + arrLen / 2, rax, cy - arrLen / 2, 0.4));
+  els.push(line(rax, cy - arrLen / 2, rax - headW, cy - arrLen / 2 + headL, 0.4));
+  els.push(line(rax, cy - arrLen / 2, rax + headW, cy - arrLen / 2 + headL, 0.4));
+  els.push(strokeText("UP", rax, cy + arrLen / 2 + 0.1 * IN, 0.2 * IN, "middle"));
+  // left: arrow pointing down
+  els.push(line(lax, cy - arrLen / 2, lax, cy + arrLen / 2, 0.4));
+  els.push(line(lax, cy + arrLen / 2, lax - headW, cy + arrLen / 2 - headL, 0.4));
+  els.push(line(lax, cy + arrLen / 2, lax + headW, cy + arrLen / 2 - headL, 0.4));
+  els.push(strokeText("DOWN", lax, cy + arrLen / 2 + 0.1 * IN, 0.2 * IN, "middle"));
+
+  // Perimeter rectangle 1" inset from the page edges, with its width/height
+  // labelled in inches in the top and left margins.
+  const inset = 1 * IN;
+  els.push(rect(inset, inset, w - 2 * inset, h - 2 * inset, 0.5));
+  const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
+  els.push(strokeText(fmt(w / IN - 2), cx, inset / 2 - 0.15 * IN, 0.3 * IN, "middle"));
+  els.push(strokeText(fmt(h / IN - 2), inset / 2, cy - 0.15 * IN, 0.3 * IN, "middle"));
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}mm" height="${h}mm" viewBox="0 0 ${w} ${h}">\n${els.join("\n")}\n</svg>`;
+}
+
+/**
+ * Registry of calibration test patterns. Each entry is a label for the dropdown
+ * and a builder that turns the current page size (mm) into an SVG string. To add
+ * a pattern, write a builder above and add one entry here.
+ */
+const TEST_PATTERNS: Record<string, { label: string; build: (w: number, h: number) => string }> = {
+  corners: { label: "Corner numbers", build: buildCornerNumbers },
+  size: { label: "Size measurement", build: buildSizeMeasurement },
+};
 
 function fmtMm(mm: number): string {
   if (mm >= 1000) return `${(mm / 1000).toFixed(2)} m`;
@@ -300,7 +429,7 @@ export default function App() {
     selectedPort, pageW, pageH, pageBackground, parsed, fileName,
     widthMm, heightMm, lockCenter, offsetX, offsetY,
     drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs,
-    penUpZ, penDownZ, penSpeedMmPerMin,
+    penUpZ, penDownZ, penSpeedMmPerMin, penUpPercent, penDownPercent,
     flipX, flipY, swapXY, optimizePaths, reversePaths,
     previewThinLines, testPattern, layerLabels, layerColors,
   } = settings;
@@ -327,6 +456,8 @@ export default function App() {
   const setPenUpZ = (v: SetArg<number>) => setSetting("penUpZ", v);
   const setPenDownZ = (v: SetArg<number>) => setSetting("penDownZ", v);
   const setPenSpeedMmPerMin = (v: SetArg<number>) => setSetting("penSpeedMmPerMin", v);
+  const setPenUpPercent = (v: SetArg<number>) => setSetting("penUpPercent", v);
+  const setPenDownPercent = (v: SetArg<number>) => setSetting("penDownPercent", v);
   const setFlipX = (v: SetArg<boolean>) => setSetting("flipX", v);
   const setFlipY = (v: SetArg<boolean>) => setSetting("flipY", v);
   const setSwapXY = (v: SetArg<boolean>) => setSetting("swapXY", v);
@@ -339,6 +470,17 @@ export default function App() {
   const testPatternOn = testPattern !== "none";
   const setLayerLabels = (v: SetArg<Record<string, string>>) => setSetting("layerLabels", v);
   const setLayerColors = (v: SetArg<Record<string, string>>) => setSetting("layerColors", v);
+
+  // The AxiDraw/EBB family lifts the pen with a servo (height %), while the
+  // DrawCore/iDraw uses a Z-axis depth. Rather than hide the irrelevant fields,
+  // we gray them out based on the connected machine so the UI shape is stable.
+  // Before anything connects we don't presume a machine, so both stay enabled.
+  const isEbb = conn.driverId === "ebb";
+  const isDrawCore = conn.driverId === "drawcore";
+  const zFieldsDisabled = isEbb;
+  const servoFieldsDisabled = isDrawCore;
+  const zHint = isEbb ? "Not used by the AxiDraw — it lifts the pen with a servo (see Pen-up/down height)" : undefined;
+  const servoHint = isDrawCore ? "Not used by the iDraw — it sets pen height with the Z axis (see Pen-up/down Z)" : undefined;
 
   // hiddenKeys is persisted as an array but consumed as a Set in the UI; bridge
   // the two here so the array/Set conversion lives in one place.
@@ -381,7 +523,7 @@ export default function App() {
           setSelectedPort(portToUse);
           try {
             const result = await api.connect(portToUse);
-            setConn({ connected: true, path: portToUse, version: result.version });
+            setConn({ connected: true, path: portToUse, version: result.version, driverId: result.driverId, driverName: result.driverName });
             setStatus({ msg: `Connected (${result.version})`, kind: "ok" });
           } catch (e) {
             setStatus({ msg: `Auto-connect failed: ${(e as Error).message}`, kind: "warn" });
@@ -395,6 +537,8 @@ export default function App() {
           connected: ev.connected,
           path: ev.path ?? (ev.connected ? prev.path : undefined),
           version: ev.version ?? (ev.connected ? prev.version : undefined),
+          driverId: ev.driverId ?? prev.driverId,
+          driverName: ev.driverName ?? prev.driverName,
         }));
         if (ev.connected && ev.path) setSelectedPort(ev.path);
       } else if (ev.type === "notice") {
@@ -564,10 +708,10 @@ export default function App() {
     if (aspect) setWidthMm(Math.round(h * aspect * 10) / 10);
   };
 
-  const testPatternParsed = useMemo<ParsedSvg | null>(
-    () => (testPatternOn ? parseSvg(buildTestPatternSvg(pageW, pageH)) : null),
-    [testPatternOn, pageW, pageH]
-  );
+  const testPatternParsed = useMemo<ParsedSvg | null>(() => {
+    const pattern = TEST_PATTERNS[testPattern];
+    return pattern ? parseSvg(pattern.build(pageW, pageH)) : null;
+  }, [testPattern, pageW, pageH]);
 
   const displayParsed: ParsedSvg | null = testPatternOn ? testPatternParsed : parsed;
   const displayWidthMm = testPatternOn && testPatternParsed ? testPatternParsed.naturalWidthMm : widthMm;
@@ -618,13 +762,15 @@ export default function App() {
       penUpZ,
       penDownZ,
       penSpeedMmPerMin,
+      penUpPercent,
+      penDownPercent,
       flipX,
       flipY,
       swapXY,
       optimizePaths,
       reversePaths,
     }),
-    [pageW, pageH, displayOffsetX, displayOffsetY, displayParsed, displayWidthMm, drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs, penUpZ, penDownZ, penSpeedMmPerMin, flipX, flipY, swapXY, optimizePaths, reversePaths]
+    [pageW, pageH, displayOffsetX, displayOffsetY, displayParsed, displayWidthMm, drawSpeed, travelSpeed, penDownDelayMs, penUpDelayMs, penUpZ, penDownZ, penSpeedMmPerMin, penUpPercent, penDownPercent, flipX, flipY, swapXY, optimizePaths, reversePaths]
   );
 
   const refreshPorts = async () => {
@@ -640,7 +786,7 @@ export default function App() {
     if (!selectedPort) return;
     try {
       const r = await api.connect(selectedPort);
-      setConn({ connected: true, path: selectedPort, version: r.version });
+      setConn({ connected: true, path: selectedPort, version: r.version, driverId: r.driverId, driverName: r.driverName });
       setStatus({ msg: `Connected (${r.version})`, kind: "ok" });
     } catch (e) {
       setStatus({ msg: (e as Error).message, kind: "error" });
@@ -756,7 +902,7 @@ export default function App() {
             <button className="danger" onClick={disconnect}>Disconnect</button>
           )}
         </div>
-        {conn.connected && <div className="status">Connected {conn.path}{conn.version ? ` · ${conn.version}` : ""}</div>}
+        {conn.connected && <div className="status">Connected {conn.path}{conn.driverName ? ` · ${conn.driverName}` : ""}{conn.version ? ` · ${conn.version}` : ""}</div>}
         </div>
 
         <div className="section">
@@ -813,7 +959,9 @@ export default function App() {
               onChange={(e) => setTestPattern(e.target.value)}
             >
               <option value="none">None</option>
-              <option value="corners">Corner numbers</option>
+              {Object.entries(TEST_PATTERNS).map(([id, p]) => (
+                <option key={id} value={id}>{p.label}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -1023,22 +1171,32 @@ export default function App() {
           <div className="field-grid-cell">
             <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
           </div>
-          <div className="field-grid-cell label">Pen-up Z</div>
+          <div className="field-grid-cell label" title={zHint}>Pen-up Z</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} />
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} disabled={zFieldsDisabled} title={zHint} />
           </div>
-          <div className="field-grid-cell label">Pen-down Z</div>
+          <div className="field-grid-cell label" title={zHint}>Pen-down Z</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} />
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} disabled={zFieldsDisabled} title={zHint} />
           </div>
-          <div className="field-grid-cell label">Pen speed up/down (mm/s)</div>
+          <div className="field-grid-cell label" title={zHint}>Pen speed up/down (mm/s)</div>
           <div className="field-grid-cell">
             <NumberInput
               className="field-input"
               min="1" step="1" decimals={1}
               value={penSpeedMmPerMin / 60}
               onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
+              disabled={zFieldsDisabled}
+              title={zHint}
             />
+          </div>
+          <div className="field-grid-cell label" title={servoHint}>Pen-up height (%)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="100" step="1" value={penUpPercent} onCommit={setPenUpPercent} disabled={servoFieldsDisabled} title={servoHint} />
+          </div>
+          <div className="field-grid-cell label" title={servoHint}>Pen-down height (%)</div>
+          <div className="field-grid-cell">
+            <NumberInput className="field-input" min="0" max="100" step="1" value={penDownPercent} onCommit={setPenDownPercent} disabled={servoFieldsDisabled} title={servoHint} />
           </div>
         </div>
         </div>

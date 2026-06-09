@@ -1,11 +1,13 @@
 import { SerialPort } from "serialport";
 import { PlotterDriverClass, PortInfo } from "./types.js";
 import { DrawCoreDriver } from "./drawcore.js";
+import { EBBDriver } from "./ebb.js";
 
 // All known plotter drivers, in detection-priority order. To add support for a
 // new plotter, implement PlotterDriver (see drawcore.ts as the template) and
-// add the class here — nothing else in the server needs to change.
-export const DRIVERS: PlotterDriverClass[] = [DrawCoreDriver];
+// add the class here — nothing else in the server needs to change. DrawCore and
+// EBB match disjoint VID/PID sets, so detection order between them is moot.
+export const DRIVERS: PlotterDriverClass[] = [DrawCoreDriver, EBBDriver];
 
 /** Default driver used when a port matches none of the registered drivers. */
 export const DEFAULT_DRIVER: PlotterDriverClass = DrawCoreDriver;

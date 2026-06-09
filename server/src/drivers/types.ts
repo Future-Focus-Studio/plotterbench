@@ -8,8 +8,20 @@
 
 // `PortInfo` is defined once in shared/types.ts (it crosses the server/client
 // boundary). Re-export it so driver modules can keep importing from "./types.js".
-import { PortInfo } from "../../../shared/types.js";
+import { PlotOptions, PortInfo } from "../../../shared/types.js";
 export type { PortInfo };
+
+/**
+ * The pen-lift parameters handed to a driver's penUp/penDown. It is a subset of
+ * PlotOptions so the engine can pass the whole options object, while each driver
+ * reads only the fields its hardware understands: DrawCore uses the Z-depth
+ * fields, the AxiDraw/EBB family uses the servo-percent fields. Carrying both
+ * keeps the interface protocol-neutral without per-driver method signatures.
+ */
+export type PenSettings = Pick<
+  PlotOptions,
+  "penUpZ" | "penDownZ" | "penSpeedMmPerMin" | "penUpPercent" | "penDownPercent"
+>;
 
 export interface SendOptions {
   timeoutMs?: number;
@@ -37,8 +49,8 @@ export interface PlotterDriver {
   setIncrementalMode(): Promise<void>;
   /** Set the current physical X/Y as the origin (must not move the pen / Z axis). */
   zeroPosition(): Promise<void>;
-  penUp(z?: number, speedMmPerMin?: number): Promise<void>;
-  penDown(z?: number, speedMmPerMin?: number): Promise<void>;
+  penUp(pen: PenSettings): Promise<void>;
+  penDown(pen: PenSettings): Promise<void>;
   moveTo(xMm: number, yMm: number, feedMmPerMin?: number): Promise<void>;
   setFeed(feedMmPerMin: number): Promise<void>;
   dwellSeconds(sec: number): Promise<void>;

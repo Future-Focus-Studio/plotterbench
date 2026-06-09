@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { WebSocketServer, WebSocket } from "ws";
-import { PlotterDriver, PortInfo } from "./drivers/types.js";
+import { PlotterDriver, PlotterDriverClass, PortInfo } from "./drivers/types.js";
 import { detectDriver, listPorts, DEFAULT_DRIVER } from "./drivers/registry.js";
 import { flattenSvg } from "./svg.js";
 import { isLocalOrigin } from "./origin.js";
@@ -49,6 +49,12 @@ let driver: PlotterDriver = new DEFAULT_DRIVER();
 let activeDriverId: string = DEFAULT_DRIVER.id;
 let plotter = new Plotter(driver);
 
+/** Static metadata (id + display name) of the driver currently bound. */
+function driverMeta(): { driverId: string; driverName: string } {
+  const cls = driver.constructor as PlotterDriverClass;
+  return { driverId: cls.id, driverName: cls.displayName };
+}
+
 let currentPath: string | null = null;
 let currentVersion: string | null = null;
 // Whether the coordinate origin has been established for the current session.
@@ -90,6 +96,7 @@ wss.on("connection", (ws) => {
       connected: driver.isOpen(),
       path: currentPath,
       version: currentVersion,
+      ...driverMeta(),
     })
   );
   ws.on("close", () => clients.delete(ws));
@@ -171,8 +178,8 @@ app.post("/api/connect", async (req, res) => {
     }
     currentPath = portPath;
     currentVersion = version;
-    broadcast({ type: "connection", connected: true, path: portPath, version });
-    res.json({ connected: true, path: portPath, version });
+    broadcast({ type: "connection", connected: true, path: portPath, version, ...driverMeta() });
+    res.json({ connected: true, path: portPath, version, ...driverMeta() });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -379,7 +386,7 @@ app.post("/api/resume", (_req, res) => {
 });
 
 app.get("/api/status", (_req, res) => {
-  res.json({ connected: driver.isOpen(), plotting: plotter.isRunning() });
+  res.json({ connected: driver.isOpen(), plotting: plotter.isRunning(), ...driverMeta() });
 });
 
 if (IS_PROD) {
@@ -448,7 +455,7 @@ async function tryAutoConnect() {
     currentPath = candidate.path;
     currentVersion = version;
     console.log(`[auto-connect] connected to ${candidate.path} (${version})`);
-    broadcast({ type: "connection", connected: true, path: candidate.path, version });
+    broadcast({ type: "connection", connected: true, path: candidate.path, version, ...driverMeta() });
   } finally {
     autoConnectBusy = false;
   }

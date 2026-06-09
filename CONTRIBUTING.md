@@ -32,12 +32,19 @@ granting Future Focus Studio LLC a broad license to it (including the right to
 relicense it commercially and to transfer it). This is the same model used by
 many open-core projects.
 
-> CLA signing is not yet automated. Until the CLA bot is set up, indicate your
-> agreement by adding the following line to your pull request description:
->
-> ```
-> I have read and agree to the Plotterbench CLA (CLA.md).
-> ```
+Signing is automated. When you open a pull request, the CLA bot checks whether
+you've signed; if not, it comments with instructions and the **CLA Assistant**
+check stays red until you do. To sign, post a single comment on your PR with
+exactly this line:
+
+```
+I have read and agree to the Plotterbench CLA (CLA.md).
+```
+
+The bot records your signature (GitHub username, timestamp, and CLA version) and
+turns the check green. You sign only once — future PRs are recognized
+automatically, unless the CLA version changes, in which case you'll be asked to
+sign again.
 
 ## Development
 

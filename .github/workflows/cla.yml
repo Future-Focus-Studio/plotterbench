@@ -1,0 +1,69 @@
+# Contributor License Agreement gate.
+#
+# Every pull request is checked against the list of CLA signers. If the PR
+# author hasn't signed, the bot comments asking them to, and the "CLA Assistant"
+# status check stays red until they do — so a branch-protection rule requiring
+# this check blocks the merge. The author signs by posting a single comment on
+# their PR (the phrase below); the bot records the signature and turns the check
+# green.
+#
+# Signatures are stored in a SEPARATE PRIVATE repo
+# (Future-Focus-Studio/plotterbench-cla-signatures) so contributor identities
+# stay out of this repo's public history. The CLA version is encoded in the
+# signatures path (`version1/…`); bump CLA.md's version and change this to
+# `version2/…` to force everyone to re-sign.
+#
+# Setup required once (GitHub side — see CONTRIBUTING.md / the go-public runbook):
+#   1. Create the private repo Future-Focus-Studio/plotterbench-cla-signatures
+#      (initialised with a `main` branch).
+#   2. Create a token with Contents:read/write on that signatures repo.
+#   3. Add it to THIS repo as an Actions secret named CLA_SIGNATURES_TOKEN.
+#   4. After the first run, add a branch-protection rule on `main` requiring the
+#      "CLA Assistant" status check.
+#
+# The action is pinned to a commit SHA (not a moving tag): this job runs on
+# `pull_request_target` with access to secrets, so a hijacked tag would be a
+# supply-chain risk. SHA = contributor-assistant/github-action v2.6.1.
+
+name: CLA Assistant
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        # Run on PR events, on the signing comment, or on an explicit "recheck".
+        if: >-
+          github.event_name == 'pull_request_target' ||
+          github.event.comment.body == 'recheck' ||
+          github.event.comment.body == 'I have read and agree to the Plotterbench CLA (CLA.md).'
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PAT with write access to the signatures repo (NOT the default token).
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.CLA_SIGNATURES_TOKEN }}
+        with:
+          path-to-document: 'https://github.com/Future-Focus-Studio/plotterbench/blob/main/CLA.md'
+          # Stored in the separate signatures repo; `version1` tracks CLA.md v1.0.
+          path-to-signatures: 'version1/cla.json'
+          branch: 'main'
+          remote-organization-name: 'Future-Focus-Studio'
+          remote-repository-name: 'plotterbench-cla-signatures'
+          # Maintainer + bots don't need to sign.
+          allowlist: 'gridwalk,dependabot[bot]'
+          # Keep the signing phrase identical to the one CONTRIBUTING.md documents.
+          custom-pr-sign-comment: 'I have read and agree to the Plotterbench CLA (CLA.md).'
+          custom-notsigned-prcomment: 'Thanks for the pull request! Before it can be merged, please agree to the [Plotterbench Contributor License Agreement](https://github.com/Future-Focus-Studio/plotterbench/blob/main/CLA.md) by posting exactly this comment on this PR:'
+          custom-allsignatories-comment: 'All contributors have signed the Plotterbench CLA. ✅'

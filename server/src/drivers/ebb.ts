@@ -2,10 +2,11 @@ import { PenSettings, PlotterDriver, PortInfo } from "./types.js";
 import { SerialTransport } from "./transport.js";
 
 // EBB (EiBotBoard) driver — the AxiDraw family: AxiDraw V2/V3, V3/A3, SE/A1–A3,
-// MiniKit, and EBB-compatible NextDraw units. This is a clean-room
-// reimplementation of the publicly documented EBB serial protocol
-// (https://evil-mad.github.io/EggBot/ebb.html); the command semantics mirror
-// Evil Mad Scientist's MIT-licensed `plotink` library but no code is copied.
+// MiniKit, and EBB-compatible NextDraw units. Implemented clean-room from the
+// public EBB serial-protocol reference (https://evil-mad.github.io/EggBot/ebb.html);
+// command semantics were cross-checked against the MIT-licensed `plotink` library.
+// No code or copyrightable expression from the GPL-licensed AxiDraw Inkscape
+// extension was used. See NOTICES.md for the full provenance statement.
 //
 // The EBB is fundamentally unlike the DrawCore/Grbl protocol:
 //   - It is a USB-CDC device (VID/PID 04D8:FD92); the baud rate is ignored.
@@ -23,49 +24,61 @@ import { SerialTransport } from "./transport.js";
 const EBB_VENDOR_ID = "04d8";
 const EBB_PRODUCT_ID = "fd92";
 
-// Microstepping resolution sent with the EM command. 1 = 16X microstepping,
-// which is the AxiDraw default ("High Resolution"). STEP_SCALE must match: at
-// 16X the AxiDraw moves 2032 motor steps per inch along each native (45°) axis.
+// Microstepping resolution sent with the EM command. 1 = 16X microstepping
+// ("High Resolution"). STEP_SCALE must match: at 16X the AxiDraw moves 2032
+// motor steps per inch along each native (45°) axis — a published AxiDraw
+// hardware figure (EBB command reference / AxiDraw documentation).
 const EM_RESOLUTION_16X = 1;
 const STEP_SCALE = 2032; // steps per inch along a native motor axis, at 16X.
 const MM_PER_INCH = 25.4;
 
-// The EBB step generator runs at 25 kHz; exceeding it loses position. We cap a
-// hair below (steps per millisecond) and stretch a move's duration to stay under
-// it — the same conservative ceiling the AxiDraw firmware planner uses.
+// The EBB step generator's hard ceiling is 25 kHz (documented EBB hardware
+// limit); above it the board loses position. We cap a hair below (in steps per
+// millisecond) and stretch a move's duration to stay under it.
 const MAX_STEP_RATE = 24.995;
 
-// AxiDraw's documented maximum XY pen speed in 16X high-resolution mode
-// (speed_lim_xy_hr ≈ 8.6979 in/s ≈ 221 mm/s). We hard-cap a little under it:
-// the mechanism physically cannot move faster, and asking for more only pins the
-// steppers at their limit. IMPORTANT: this is the *top* speed, reachable only
-// with acceleration ramping — which this driver does not yet do. Until it does,
-// sustained speeds anywhere near this cap from a standstill will stall the
+// The AxiDraw mechanism tops out around 220 mm/s in 16X mode. We hard-cap a
+// little under that: it physically cannot move faster, and asking for more only
+// pins the steppers at their limit. IMPORTANT: this is the *top* speed, reachable
+// only with acceleration ramping — which this driver does not yet do. Until it
+// does, sustained speeds anywhere near this cap from a standstill will stall the
 // motors. Real-world speeds should stay well below it (draw ≲75, travel ≲150
 // mm/s). The cap exists to stop a fat-fingered value from endangering hardware,
 // NOT as a usable operating speed.
 const MAX_XY_SPEED_MM_PER_MIN = 200 * 60; // 200 mm/s
 
-// Pen-lift servo travel, in the firmware's 83.3 ns position units. These are the
-// stock AxiDraw limits: SERVO_MIN is "0% / fully lowered", SERVO_MAX is
-// "100% / fully raised". A height percentage maps linearly between them.
-const SERVO_MIN = 9855;
-const SERVO_MAX = 27831;
+// Pen-lift servo endpoints, in the EBB's servo-position units of 83.3 ns
+// (1/12 MHz) — see the public EBB `SC` command reference. These correspond to
+// servo pulse widths of ~0.82 ms (down) and ~2.32 ms (up), spanning the travel
+// of a standard AxiDraw pen-lift servo. A height percentage maps linearly
+// between them.
+const SERVO_MIN = 9855;  // ~0.82 ms pulse — pen fully lowered (0%)
+const SERVO_MAX = 27831; // ~2.32 ms pulse — pen fully raised (100%)
 
-// Servo motion timing model (from the AxiDraw configuration): the control signal
-// sweeps its full range in SERVO_SWEEP_MS at 100% rate, and the EBB updates the
-// servo every SERVO_UPDATE_MS. Physical pen travel takes roughly
-// SERVO_MOVE_MIN + SERVO_MOVE_SLOPE * (percent of full travel) milliseconds.
+// Servo sweep model: a standard RC servo crosses its full travel in ~200 ms at
+// full command rate, and the EBB refreshes the servo signal about every 24 ms
+// (EBB `SC` reference). Used only to size the SC,11/SC,12 sweep-rate values.
 const SERVO_SWEEP_MS = 200;
 const SERVO_UPDATE_MS = 24;
-const SERVO_MOVE_MIN_MS = 45;
-const SERVO_MOVE_SLOPE_MS = 2.69;
-// Rate of servo signal change, as a fraction of full speed (AxiDraw defaults).
+
+// Pen-settle delay model — independent and deliberately conservative. The SP
+// delay holds the next motion command until the pen has physically finished
+// moving: too short causes ghost lead-ins / drag marks, too long merely slows
+// the plot. Servo settle time scales with how far the servo travels, so we use a
+// fixed base plus a per-percent term. These coefficients are chosen to be
+// *generous* — at the 60/30 default they yield ~150 ms (the value validated safe
+// on hardware was 126 ms) and they stay ≥ that safe baseline across the whole
+// 0–100% range, so the delay can only ever be longer, never under-settled.
+const SERVO_SETTLE_BASE_MS = 60;
+const SERVO_SETTLE_PER_PERCENT_MS = 3;
+
+// Servo sweep rate as a fraction of full speed: raise a little faster than we
+// lower. Conservative, non-critical defaults (they only affect lift/drop speed).
 const PEN_RAISE_RATE = 0.75;
 const PEN_LOWER_RATE = 0.5;
 
 // Keep a "hardware pause" (SM,ms,0,0) chunked so a future pause-button poll
-// stays responsive, matching plotink's doTimedPause behavior.
+// stays responsive — the same chunking approach as plotink's (MIT) doTimedPause.
 const MAX_PAUSE_CHUNK_MS = 750;
 
 export class EBBDriver extends SerialTransport implements PlotterDriver {
@@ -196,7 +209,7 @@ export class EBBDriver extends SerialTransport implements PlotterDriver {
     await this.send(`SC,5,${this.servoDownUnits}`); // SC,5 = pen-down position
 
     const travelPercent = Math.abs(upPercent - downPercent);
-    const delayMs = Math.round(SERVO_MOVE_MIN_MS + SERVO_MOVE_SLOPE_MS * travelPercent);
+    const delayMs = Math.round(SERVO_SETTLE_BASE_MS + SERVO_SETTLE_PER_PERCENT_MS * travelPercent);
     // SP,1 = pen up, SP,0 = pen down.
     await this.send(`SP,${up ? 1 : 0},${delayMs}`);
   }

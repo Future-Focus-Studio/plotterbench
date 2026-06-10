@@ -62,8 +62,8 @@ jobs:
           remote-organization-name: 'Future-Focus-Studio'
           remote-repository-name: 'plotterbench-cla-signatures'
           # Maintainer + bots don't need to sign.
-          allowlist: 'dependabot[bot]'
+          allowlist: 'gridwalk,dependabot[bot]'
           # Keep the signing phrase identical to the one CONTRIBUTING.md documents.
           custom-pr-sign-comment: 'I have read and agree to the Plotterbench CLA (CLA.md).'
           custom-notsigned-prcomment: 'Thanks for the pull request! Before it can be merged, please agree to the [Plotterbench Contributor License Agreement](https://github.com/Future-Focus-Studio/plotterbench/blob/main/CLA.md) by posting exactly this comment on this PR:'
-          custom-allsignatories-comment: 'All contributors have signed the Plotterbench CLA. ✅'
+          custom-allsigned-prcomment: 'All contributors have signed the Plotterbench CLA. ✅'

@@ -77,6 +77,25 @@ export default function NumberInput({
           editing.current = false;
           setDraft(format(value));
           (e.currentTarget as HTMLInputElement).blur();
+        } else if (
+          e.shiftKey &&
+          (e.key === "ArrowUp" || e.key === "ArrowDown")
+        ) {
+          // Hold Shift to step by 10x the normal increment. The native input
+          // only steps by `step`, so we take over for the shifted case.
+          e.preventDefault();
+          const step = Number(rest.step) || 1;
+          const delta = (e.key === "ArrowUp" ? 1 : -1) * step * 10;
+          const base = parseFloat(draft);
+          let next = (Number.isFinite(base) ? base : value) + delta;
+          const min = rest.min != null ? Number(rest.min) : -Infinity;
+          const max = rest.max != null ? Number(rest.max) : Infinity;
+          next = Math.min(max, Math.max(min, next));
+          // Avoid float dust like 0.30000000000000004 from repeated steps.
+          next = Number(next.toFixed(12));
+          editing.current = true;
+          setDraft(format(next));
+          onCommit(next);
         }
         onKeyDown?.(e);
       }}

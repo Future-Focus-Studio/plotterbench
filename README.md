@@ -1,9 +1,38 @@
 # Plotterbench
 
-A local web interface for plotting SVGs on a pen plotter. Drop an SVG, set page size, drag to position, and hit Plot. The browser talks to a small Node server over HTTP + WebSocket; the server drives the plotter directly over USB serial. Two plotter families are supported out of the box and auto-detected by USB VID/PID:
+A local web interface for plotting SVGs on a pen plotter. Drop an SVG, set page size, drag to position, and hit Plot. The browser talks to a small Node server over HTTP + WebSocket; the server drives the plotter directly over USB serial. Two plotter families are supported out of the box and auto-detected by USB VID/PID.
 
-- **DrawCore** (UUNA TEK iDraw and other DrawCore-based plotters) — a Grbl-derived G-code protocol over a CH340 USB-UART.
-- **EBB / AxiDraw** (the AxiDraw family: V3, V3/A3, SE/A3, MiniKit, V3 Personal, plus EggBot/WaterColorBot-class EiBotBoard machines) — the EiBotBoard serial protocol.
+## Prerequisites
+
+- Node 18+
+- A supported plotter plugged in via USB:
+  - a **DrawCore** plotter (UUNA TEK / iDraw) — enumerates as a CH340 serial port, or
+  - an **AxiDraw / EiBotBoard** plotter — enumerates as a USB-CDC modem port.
+
+## Install & run
+
+```bash
+npm install
+npm run dev
+```
+
+That single command starts **both** the Node server (`:49787`) and the Vite dev server (`:49173`). Open http://localhost:49173.
+
+## Workflow
+
+1. **Connect** to the plotter (Refresh → select port → Connect), or let auto-connect find it. The status line shows the detected machine (e.g. "DrawCore (Uunatek/iDraw)" or "AxiDraw (EBB)") and its firmware version.
+2. Set **page** size in inches.
+3. Load an SVG (drop or browse). Adjust width/height (aspect locked by default) and drag the dashed outline on the page to position. Per-layer labels and an **Optimization** preview (strokes, merged, reversed, travel saved) help you check the plan first.
+4. Use **Orientation** toggles (flip X, flip Y, swap X/Y) if your plot comes out mirrored or rotated.
+5. Use **Pen up / Pen down** to test the servo, **Motors off** to release the steppers, **Home** to return to 0,0.
+6. Position your paper so the pen starts at the top-left corner of the page, then **Set origin** so the plotter treats the current position as (0,0).
+7. Click **Plot**. Watch the progress bar; you can **Pause / Resume** between strokes or **Cancel** any time.
+
+The plot treats the origin you set as the top-left of your page.
+
+### Calibration test patterns
+
+The **Test pattern** dropdown draws built-in diagnostic cards (instead of your SVG) to check a freshly-connected machine: corner-number orientation, an imperial size-measurement card, and a **metric calibration ruler** (per-axis mm rulers + a square/circle) for confirming steps-per-mm and that the X and Y scales agree.
 
 ## Architecture
 
@@ -36,48 +65,8 @@ Support for a new plotter (NextDraw, generic GRBL, EggBot, …) is an additive c
 2. Give the class a static `id`, `displayName`, and `matches(port)` (USB VID/PID detection).
 3. Register it in `server/src/drivers/registry.ts` by adding it to `DRIVERS`.
 
-## Prerequisites
 
-- Node 18+
-- A supported plotter plugged in via USB:
-  - a **DrawCore** plotter (UUNA TEK / iDraw) — enumerates as a CH340 serial port, or
-  - an **AxiDraw / EiBotBoard** plotter — enumerates as a USB-CDC modem port.
-
-## Install & run
-
-```bash
-npm install
-npm run dev
-```
-
-That single command starts **both** the Node server (`:49787`) and the Vite dev server (`:49173`). Open http://localhost:49173. The server auto-connects to a recognized plotter if one is plugged in; otherwise click **Refresh**, pick the port, click **Connect**.
-
-### Production build
-
-```bash
-npm run build
-npm start
-```
-
-This builds the web app to `dist/web/` and the server to `server/dist/`, then serves both from a single process on http://localhost:49787.
-
-## Workflow
-
-1. **Connect** to the plotter (Refresh → select port → Connect), or let auto-connect find it. The status line shows the detected machine (e.g. "DrawCore (Uunatek/iDraw)" or "AxiDraw (EBB)") and its firmware version.
-2. Set **page** size in inches.
-3. Load an SVG (drop or browse). Adjust width/height (aspect locked by default) and drag the dashed outline on the page to position. Per-layer labels and an **Optimization** preview (strokes, merged, reversed, travel saved) help you check the plan first.
-4. Use **Orientation** toggles (flip X, flip Y, swap X/Y) if your plot comes out mirrored or rotated.
-5. Use **Pen up / Pen down** to test the servo, **Motors off** to release the steppers, **Home** to return to 0,0.
-6. Position your paper so the pen starts at the top-left corner of the page, then **Set origin** so the plotter treats the current position as (0,0).
-7. Click **Plot**. Watch the progress bar; you can **Pause / Resume** between strokes or **Cancel** any time.
-
-The plot treats the origin you set as the top-left of your page.
-
-### Calibration test patterns
-
-The **Test pattern** dropdown draws built-in diagnostic cards (instead of your SVG) to check a freshly-connected machine: corner-number orientation, an imperial size-measurement card, and a **metric calibration ruler** (per-axis mm rulers + a square/circle) for confirming steps-per-mm and that the X and Y scales agree.
-
-## Notes & caveats
+## Notes
 
 - **Pen lift is per-protocol.** DrawCore drives the pen with **Z-axis moves** (`G1 Z…`); the AxiDraw/EBB family drives it with a **servo** (`SP`). The settings follow suit: DrawCore exposes pen-up/down **Z** positions, the EBB family exposes pen-up/down **height %**. The UI grays out whichever set doesn't apply to the connected machine. Move speed and dwell delays are configurable for both.
 - **Acceleration.** DrawCore acceleration is handled by its Grbl firmware planner. The EBB driver currently issues constant-velocity moves with **no host-side acceleration planning**, so keep AxiDraw speeds moderate (draw ≲ 75, travel ≲ 150 mm/s); it caps effective speed at the machine's physical limit (~221 mm/s in 16× mode) so an out-of-range value can't overdrive the motors. If you see overshoot or ringing, lower the **Draw** speed.

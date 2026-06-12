@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Setup & usage help
+    url: https://github.com/Future-Focus-Studio/plotterbench/blob/main/README.md
+    about: Check the README (install, supported machines, SVG features, troubleshooting) before opening an issue.
+  - name: Contributing & CLA
+    url: https://github.com/Future-Focus-Studio/plotterbench/blob/main/CONTRIBUTING.md
+    about: How to contribute, and the Contributor License Agreement that PRs require.

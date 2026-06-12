@@ -1,5 +1,7 @@
 # Plotterbench
 
+**Website:** [plotterbench.com](https://plotterbench.com)
+
 A local web interface for plotting SVGs on a pen plotter. Drop an SVG, set page size, drag to position, and hit Plot. The browser talks to a small Node server over HTTP + WebSocket; the server drives the plotter directly over USB serial. Two plotter families are supported out of the box and auto-detected by USB VID/PID.
 
 ## Prerequisites

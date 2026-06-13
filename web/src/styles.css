@@ -393,3 +393,30 @@ button + button { margin-left: 6px; }
   box-shadow: 0 0 6px rgba(255, 216, 74, 0.7);
 }
 .instr-row.instr-hover { outline: 1px solid #ffd84a; outline-offset: -1px; }
+
+/* Modal (native <dialog>). Padding lives on .modal-body so backdrop clicks
+   land on the dialog element itself (see Modal.tsx). */
+dialog.modal {
+  padding: 0;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #e5e5e5;
+  max-width: 440px;
+  width: calc(100vw - 32px);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+}
+dialog.modal::backdrop { background: rgba(0, 0, 0, 0.55); }
+.modal-body { padding: 20px; }
+.modal-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+}
+.modal-text { font-size: 14px; line-height: 1.5; color: #ccc; margin: 0 0 8px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+.modal-actions > button { flex: 1 1 0; margin: 0; }
+/* Inline confirmation that origin was captured. */
+.modal-origin-set { font-size: 13px; color: #7ec77e; margin: 4px 0 0; }

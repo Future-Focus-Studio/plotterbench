@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import InstructionList from "./InstructionList.js";
+import Modal from "./Modal.js";
 import NumberInput from "./NumberInput.js";
 import PageCanvas from "./PageCanvas.js";
 import SvgTree, { applyLayerColors, buildSvgTree, filterSvgByHidden, SvgTreeNode } from "./SvgTree.js";
@@ -569,6 +570,9 @@ export default function App() {
   const [progress, setProgress] = useState<ProgressState>(null);
   const [plotPolylines, setPlotPolylines] = useState<{ x: number; y: number }[][] | null>(null);
   const [hoveredPolyline, setHoveredPolyline] = useState<number | null>(null);
+  // Pre-plot origin confirmation gate (see the "Begin plot" modal below).
+  const [originConfirmOpen, setOriginConfirmOpen] = useState(false);
+  const [originConfirmed, setOriginConfirmed] = useState(false);
   const [dragHover, setDragHover] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1326,7 +1330,12 @@ export default function App() {
         <div className="ctrl-row">
           <div className="ctrl-plot">
             {!plotting && !paused ? (
-              <button onClick={() => plot(0)} disabled={!conn.connected || !displayParsed}>Plot</button>
+              <button
+                onClick={() => { setOriginConfirmed(false); setOriginConfirmOpen(true); }}
+                disabled={!conn.connected || !displayParsed}
+              >
+                Plot
+              </button>
             ) : paused ? (
               <>
                 <button onClick={resume}>Resume</button>
@@ -1341,6 +1350,44 @@ export default function App() {
           </div>
           <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
         </div>
+
+        <Modal
+          open={originConfirmOpen}
+          onClose={() => setOriginConfirmOpen(false)}
+          title="Set origin before plotting"
+        >
+          <p className="modal-text">
+            Move the pen to the <strong>top-left corner (0,0)</strong> of your
+            page and confirm it's positioned there. The plot starts from this
+            point.
+          </p>
+          {originConfirmed && (
+            <p className="modal-origin-set">✓ Origin set at the current position.</p>
+          )}
+          <div className="modal-actions">
+            <button
+              className="secondary"
+              onClick={async () => {
+                try {
+                  await api.setOrigin();
+                  setOriginConfirmed(true);
+                  setStatus({ msg: "Origin set at current position", kind: "ok" });
+                } catch (e) {
+                  setStatus({ msg: (e as Error).message, kind: "error" });
+                }
+              }}
+            >
+              Set origin here
+            </button>
+            <button
+              disabled={!originConfirmed}
+              title={originConfirmed ? undefined : "Set the origin first"}
+              onClick={() => { setOriginConfirmOpen(false); plot(0); }}
+            >
+              Begin plot
+            </button>
+          </div>
+        </Modal>
         {progress && (
           <>
             <div className="status">

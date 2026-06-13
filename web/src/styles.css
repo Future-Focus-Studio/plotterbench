@@ -405,6 +405,15 @@ dialog.modal {
   max-width: 440px;
   width: calc(100vw - 32px);
   box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  /* Center on the viewport explicitly. The UA's modal-dialog centering relies on
+     inset:0 + margin:auto, which some engines over-constrain for a fit-content
+     dialog (margin-bottom collapses to 0, pinning it to the bottom). Transform
+     centering doesn't depend on margin resolution, so it's robust. */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 dialog.modal::backdrop { background: rgba(0, 0, 0, 0.55); }
 .modal-body { padding: 20px; }

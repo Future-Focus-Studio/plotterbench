@@ -670,6 +670,9 @@ export default function App() {
     setHiddenKeys(new Set());
     setLayerLabels({});
     setLayerColors({});
+    // A calibration pattern overrides the displayed SVG, so loading a real one
+    // clears it — otherwise the new SVG would be hidden behind the pattern.
+    setTestPattern("none");
   }, [pageW, pageH]);
 
   const rotate90 = useCallback(() => {

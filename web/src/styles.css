@@ -429,3 +429,24 @@ dialog.modal::backdrop { background: rgba(0, 0, 0, 0.55); }
 .modal-actions > button { flex: 1 1 0; margin: 0; }
 /* Inline confirmation that origin was captured. */
 .modal-origin-set { font-size: 13px; color: #7ec77e; margin: 4px 0 0; }
+
+/* Scrollbars — themed to the dark palette instead of the OS default light bars.
+   Firefox uses scrollbar-width/-color; Blink/WebKit use the ::-webkit-scrollbar
+   pseudo-elements. A transparent track + padding-box thumb lets the underlying
+   surface (#1a1a1a stage / #222 sidebars) show through, so the bars blend in. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
+}
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 8px;
+  /* Transparent border + padding-box clip insets the thumb so it doesn't touch
+     the edges — reads as a slim pill rather than a full-width bar. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: #565656; background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }

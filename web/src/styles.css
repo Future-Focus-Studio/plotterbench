@@ -15,9 +15,15 @@ html, body { height: 100%; overflow: hidden; }
   border-left: 1px solid #333;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* Scroll the whole sidebar when it can't fit (short windows) instead of
+     clipping. Combined with the rules below: fixed sections keep their size,
+     the instructions section keeps a minimum, and anything past that scrolls. */
+  overflow: hidden auto;
   padding: 0;
 }
+/* Pen speed / Controls must not shrink below their content, or they'd overflow a
+   clipped box and visually overlap the instructions section. */
+.sidebar-right > .section:not(.section-grow) { flex-shrink: 0; }
 
 /* A section = one heading + its controls, with consistent padding and a thin
    full-width divider below it. */
@@ -26,8 +32,11 @@ html, body { height: 100%; overflow: hidden; }
 .section h2 { margin: 0 0 10px; }
 .section > *:last-child { margin-bottom: 0; }
 .dimmed > *:last-child { margin-bottom: 0; }
-/* The section that should fill remaining sidebar height and scroll internally. */
-.section-grow { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* The section that should fill remaining sidebar height and scroll internally.
+   Grows to fill on tall windows (instr-list scrolls inside); on short windows it
+   shrinks only to this floor, after which the whole sidebar scrolls instead of
+   squishing the list to nothing. */
+.section-grow { flex: 1 1 auto; min-height: 220px; display: flex; flex-direction: column; }
 .stage {
   padding: 0;
   display: flex;

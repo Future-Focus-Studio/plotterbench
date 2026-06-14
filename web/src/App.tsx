@@ -495,6 +495,12 @@ export default function App() {
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [conn, setConn] = useState<ConnectionState>({ connected: false });
   const [status, setStatus] = useState<{ msg: string; kind: "ok" | "error" | "warn" } | null>(null);
+  // Connection-scoped feedback (connect / auto-connect / disconnect, success and
+  // failure) shown in the Connection section under the buttons — kept separate
+  // from the global `status` line at the bottom, which carries plot / file /
+  // control feedback. Connection messages used to land in that bottom line,
+  // far from the Connection UI they describe.
+  const [connStatus, setConnStatus] = useState<{ msg: string; kind: "ok" | "error" | "warn" } | null>(null);
 
   const [settings, setSetting] = useSettings();
   const {
@@ -599,13 +605,13 @@ export default function App() {
           try {
             const result = await api.connect(portToUse);
             setConn({ connected: true, path: portToUse, version: result.version, driverId: result.driverId, driverName: result.driverName });
-            setStatus({ msg: `Connected (${result.version})`, kind: "ok" });
+            setConnStatus(null);
           } catch (e) {
-            setStatus({ msg: `Auto-connect failed: ${(e as Error).message}`, kind: "warn" });
+            setConnStatus({ msg: `Auto-connect failed: ${(e as Error).message}`, kind: "warn" });
           }
         }
       })
-      .catch((e) => setStatus({ msg: e.message, kind: "error" }));
+      .catch((e) => setConnStatus({ msg: e.message, kind: "error" }));
     const close = openWs((ev) => {
       if (ev.type === "hello" || ev.type === "connection") {
         setConn((prev) => ({
@@ -617,7 +623,8 @@ export default function App() {
         }));
         if (ev.connected && ev.path) setSelectedPort(ev.path);
       } else if (ev.type === "notice") {
-        setStatus({ msg: ev.message, kind: ev.level === "warn" ? "warn" : "ok" });
+        // Server notices are all connection/origin-on-connect feedback.
+        setConnStatus({ msg: ev.message, kind: ev.level === "warn" ? "warn" : "ok" });
       } else if (ev.type === "progress") {
         setProgress(ev);
         if (ev.phase === "done") setStatus({ msg: "Plot complete", kind: "ok" });
@@ -865,9 +872,9 @@ export default function App() {
     try {
       const r = await api.connect(selectedPort);
       setConn({ connected: true, path: selectedPort, version: r.version, driverId: r.driverId, driverName: r.driverName });
-      setStatus({ msg: `Connected (${r.version})`, kind: "ok" });
+      setConnStatus(null);
     } catch (e) {
-      setStatus({ msg: (e as Error).message, kind: "error" });
+      setConnStatus({ msg: (e as Error).message, kind: "error" });
     }
   };
 
@@ -875,8 +882,9 @@ export default function App() {
     try {
       await api.disconnect();
       setConn({ connected: false });
+      setConnStatus(null);
     } catch (e) {
-      setStatus({ msg: (e as Error).message, kind: "error" });
+      setConnStatus({ msg: (e as Error).message, kind: "error" });
     }
   };
 
@@ -954,7 +962,17 @@ export default function App() {
     <div className="app">
       <aside className="sidebar">
         <div className="section">
-        <h2>Connection</h2>
+        <h2 className="conn-header">
+          <span>Connection</span>
+          <span
+            className={`conn-led ${conn.connected ? "on" : "off"}`}
+            role="img"
+            aria-label={conn.connected ? "Connected" : "Disconnected"}
+            title={conn.connected
+              ? `Connected ${conn.path ?? ""}${conn.driverName ? ` · ${conn.driverName}` : ""}${conn.version ? ` · ${conn.version}` : ""}`
+              : "Disconnected"}
+          />
+        </h2>
         <div className="row">
           <select value={selectedPort} onChange={(e) => setSelectedPort(e.target.value)}>
             <option value="">-- Select port --</option>
@@ -980,7 +998,7 @@ export default function App() {
             <button className="danger" onClick={disconnect}>Disconnect</button>
           )}
         </div>
-        {conn.connected && <div className="status">Connected {conn.path}{conn.driverName ? ` · ${conn.driverName}` : ""}{conn.version ? ` · ${conn.version}` : ""}</div>}
+        {connStatus && <div className={`status ${connStatus.kind === "error" ? "error" : connStatus.kind === "warn" ? "warn" : ""}`}>{connStatus.msg}</div>}
         </div>
 
         <div className="section">

@@ -5,6 +5,29 @@ import { PortInfo, SendOptions } from "./types.js";
 // Legacy env var name, kept for continuity with earlier (EBB-era) tooling.
 const DEBUG = process.env.DEBUG_EBB !== "0";
 
+/**
+ * A serial open fails with a cryptic OS-level error ("Cannot lock port" /
+ * "Resource temporarily unavailable" / EBUSY / "Access denied") when the port is
+ * already held by another process — almost always another Plotterbench window or
+ * the dev server, since the plotter can only be opened by one process at a time.
+ * Translate that specific case into a message the UI can show as-is; pass any
+ * other open error through unchanged.
+ */
+function friendlyOpenError(err: Error): Error {
+  const m = (err.message || "").toLowerCase();
+  const inUse =
+    m.includes("cannot lock port") ||
+    m.includes("resource temporarily unavailable") ||
+    m.includes("ebusy") ||
+    m.includes("access denied") ||
+    m.includes("access is denied");
+  if (!inUse) return err;
+  return new Error(
+    "Plotter is in use by another app — likely another Plotterbench window or the dev " +
+      "server. Close it (or disconnect there), then try again.",
+  );
+}
+
 interface PendingCommand {
   command: string;
   resolve: (reply: string[]) => void;
@@ -104,9 +127,13 @@ export abstract class SerialTransport {
     this.port.on("close", () => this.onClose());
     this.port.on("error", (err) => this.onError(err));
 
-    await new Promise<void>((resolve, reject) => {
-      this.port!.open((err) => (err ? reject(err) : resolve()));
-    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        this.port!.open((err) => (err ? reject(err) : resolve()));
+      });
+    } catch (err) {
+      throw friendlyOpenError(err as Error);
+    }
     await new Promise<void>((resolve, reject) => {
       this.port!.set({ rts: false, dtr: false }, (err) => (err ? reject(err) : resolve()));
     });

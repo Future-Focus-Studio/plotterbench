@@ -50,9 +50,10 @@ const FIDELITY_TOLERANCE_MM = 0.05;
 
 interface Card {
   file: string;
-  /** Commit a byte-exact protocol golden. Disabled for the endurance card —
-   *  its ~15k-line stream isn't reviewable as a diff; re-render + the command
-   *  count below guard it instead. */
+  /** Commit a byte-exact protocol golden. Disabled for the endurance and
+   *  acceptance cards — their multi-thousand-line streams aren't reviewable as a
+   *  diff (and card 10 is artwork, not a protocol surface worth blessing);
+   *  re-render fidelity + the command count below guard them instead. */
   golden: boolean;
 }
 
@@ -67,7 +68,7 @@ const CARDS: Card[] = [
   { file: "07-bed-extent.svg", golden: true },
   { file: "08-parser-matrix.svg", golden: true },
   { file: "09-endurance-stress.svg", golden: false },
-  { file: "10-acceptance-art.svg", golden: true },
+  { file: "10-acceptance-art.svg", golden: false },
 ];
 
 /** Assert `content` matches the golden at `path`, or (in bless mode) record it. */

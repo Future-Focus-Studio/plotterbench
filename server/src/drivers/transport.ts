@@ -6,6 +6,84 @@ import { PortInfo, SendOptions } from "./types.js";
 const DEBUG = process.env.DEBUG_EBB !== "0";
 
 /**
+ * The minimal serial surface SerialTransport drives. A real plotter uses the
+ * node-serialport backend below; the headless capture harness (server/src/testing)
+ * injects a virtual backend that records every byte written and replies with
+ * canned firmware responses — see `setBackendFactory`. Isolating I/O here is what
+ * lets the golden-file / re-render tests exercise the *real* command emitters
+ * without a serial port (backlog task 31).
+ */
+export interface SerialBackend {
+  /** True between a resolved open() and close(). */
+  readonly isOpen: boolean;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  /** Write raw bytes (command + terminator) to the device. */
+  write(data: string): Promise<void>;
+}
+
+/** Reply/lifecycle callbacks a backend pushes up into the transport. */
+export interface BackendHandlers {
+  /** One delimiter-framed reply line from the device. */
+  onLine: (line: string) => void;
+  onClose: () => void;
+  onError: (err: Error) => void;
+}
+
+export type BackendFactory = (
+  path: string,
+  baudRate: number,
+  delimiter: string,
+  handlers: BackendHandlers,
+) => SerialBackend;
+
+/**
+ * The production backend: a node-serialport with a line-framing parser. This is
+ * exactly the open/parser/signal sequence SerialTransport used inline before the
+ * backend seam existed, so real hardware behavior is unchanged.
+ */
+function nodeSerialBackend(
+  path: string,
+  baudRate: number,
+  delimiter: string,
+  handlers: BackendHandlers,
+): SerialBackend {
+  // CH340 / many USB-UARTs want RTS/DTR deasserted so we don't auto-reset the
+  // MCU on open.
+  const port = new SerialPort({ path, baudRate, autoOpen: false, rtscts: false });
+  const parser = port.pipe(new ReadlineParser({ delimiter }));
+  parser.on("data", (line: string) => handlers.onLine(line));
+  port.on("close", () => handlers.onClose());
+  port.on("error", (err) => handlers.onError(err));
+  return {
+    get isOpen() {
+      return port.isOpen === true;
+    },
+    open() {
+      return new Promise<void>((resolve, reject) => {
+        port.open((err) => (err ? reject(err) : resolve()));
+      }).then(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            port.set({ rts: false, dtr: false }, (err) => (err ? reject(err) : resolve()));
+          }),
+      );
+    },
+    close() {
+      return new Promise<void>((resolve) => {
+        if (!port.isOpen) return resolve();
+        port.close(() => resolve());
+      });
+    },
+    write(data: string) {
+      return new Promise<void>((resolve, reject) => {
+        port.write(data, (err) => (err ? reject(err) : resolve()));
+      });
+    },
+  };
+}
+
+/**
  * A serial open fails with a cryptic OS-level error ("Cannot lock port" /
  * "Resource temporarily unavailable" / EBUSY / "Access denied") when the port is
  * already held by another process — almost always another Plotterbench window or
@@ -48,8 +126,8 @@ interface PendingCommand {
  * `expectsOk` without touching the queue mechanics.
  */
 export abstract class SerialTransport {
-  protected port: SerialPort | null = null;
-  protected parser: ReadlineParser | null = null;
+  private backend: SerialBackend | null = null;
+  private backendFactory: BackendFactory = nodeSerialBackend;
   private queue: PendingCommand[] = [];
   private current: PendingCommand | null = null;
 
@@ -63,6 +141,15 @@ export abstract class SerialTransport {
   protected noOkCommands: Set<string> = new Set();
 
   constructor(private readonly logTag: string) {}
+
+  /**
+   * Test seam (headless capture harness): swap the serial backend before open().
+   * Production code never calls this — the default is the node-serialport backend.
+   * Used by server/src/testing/virtual-device.ts to capture the command stream.
+   */
+  setBackendFactory(factory: BackendFactory) {
+    this.backendFactory = factory;
+  }
 
   protected log(...args: unknown[]) {
     if (DEBUG) console.log(`[${this.logTag}]`, ...args);
@@ -108,47 +195,32 @@ export abstract class SerialTransport {
   }
 
   isOpen(): boolean {
-    return this.port?.isOpen === true;
+    return this.backend?.isOpen === true;
   }
 
   async open(path: string): Promise<void> {
-    if (this.port?.isOpen) await this.close();
+    if (this.backend?.isOpen) await this.close();
 
-    // CH340 / many USB-UARTs want RTS/DTR deasserted so we don't auto-reset the
-    // MCU on open.
-    this.port = new SerialPort({
-      path,
-      baudRate: this.baudRate,
-      autoOpen: false,
-      rtscts: false,
+    this.backend = this.backendFactory(path, this.baudRate, this.delimiter, {
+      onLine: (line) => this.onLine(line),
+      onClose: () => this.onClose(),
+      onError: (err) => this.onError(err),
     });
-    this.parser = this.port.pipe(new ReadlineParser({ delimiter: this.delimiter }));
-    this.parser.on("data", (line: string) => this.onLine(line));
-    this.port.on("close", () => this.onClose());
-    this.port.on("error", (err) => this.onError(err));
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        this.port!.open((err) => (err ? reject(err) : resolve()));
-      });
+      await this.backend.open();
     } catch (err) {
+      this.backend = null;
       throw friendlyOpenError(err as Error);
     }
-    await new Promise<void>((resolve, reject) => {
-      this.port!.set({ rts: false, dtr: false }, (err) => (err ? reject(err) : resolve()));
-    });
     this.log(`opened ${path} @ ${this.baudRate}`);
   }
 
   async close(): Promise<void> {
-    if (!this.port) return;
-    const p = this.port;
-    this.port = null;
-    this.parser = null;
-    await new Promise<void>((resolve) => {
-      if (!p.isOpen) return resolve();
-      p.close(() => resolve());
-    });
+    if (!this.backend) return;
+    const b = this.backend;
+    this.backend = null;
+    await b.close();
     this.flushPending(new Error("Serial port closed"));
     this.log("closed");
   }
@@ -159,7 +231,7 @@ export abstract class SerialTransport {
     const timeoutMs = opts.timeoutMs ?? 15_000;
     const expectOk = opts.expectOk ?? this.expectsOk(command);
     return new Promise<string[]>((resolve, reject) => {
-      if (!this.port?.isOpen) return reject(new Error("Not connected"));
+      if (!this.backend?.isOpen) return reject(new Error("Not connected"));
       const pending: PendingCommand = {
         command,
         resolve,
@@ -174,11 +246,9 @@ export abstract class SerialTransport {
   }
 
   protected writeRaw(data: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.port?.isOpen) return reject(new Error("Not connected"));
-      this.log("TX →", JSON.stringify(data));
-      this.port.write(data, (err) => (err ? reject(err) : resolve()));
-    });
+    if (!this.backend?.isOpen) return Promise.reject(new Error("Not connected"));
+    this.log("TX →", JSON.stringify(data));
+    return this.backend.write(data);
   }
 
   protected drain(ms: number): Promise<void> {
@@ -190,13 +260,12 @@ export abstract class SerialTransport {
     const next = this.queue.shift()!;
     this.current = next;
     this.log("TX →", next.command);
-    this.port!.write(next.command + this.lineTerminator, (err) => {
-      if (err) {
-        clearTimeout(next.timer);
-        this.current = null;
-        next.reject(err);
-        this.pump();
-      }
+    this.backend!.write(next.command + this.lineTerminator).catch((err: Error) => {
+      if (this.current !== next) return;
+      clearTimeout(next.timer);
+      this.current = null;
+      next.reject(err);
+      this.pump();
     });
   }
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 06 — CORNER RINGING</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 06 — CORNER / RINGING</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">accel-decel · overshoot — REPLOT at increasing speed settings</text>
+    <path d="M 20.0 45.0 L 20.0 27.0 L 28.5 27.0 L 28.5 45.0 L 37.0 45.0 L 37.0 27.0 L 45.5 27.0 L 45.5 45.0 L 54.0 45.0 L 54.0 27.0 L 62.5 27.0 L 62.5 45.0 L 71.0 45.0 L 71.0 27.0 L 79.5 27.0 L 79.5 45.0 L 88.0 45.0 L 88.0 27.0 L 96.5 27.0 L 96.5 45.0 L 105.0 45.0 L 105.0 27.0 L 113.5 27.0 L 113.5 45.0 L 122.0 45.0 L 122.0 27.0 L 130.5 27.0 L 130.5 45.0 L 139.0 45.0 L 139.0 27.0 L 147.5 27.0 L 147.5 45.0 L 156.0 45.0 L 156.0 27.0 L 164.5 27.0 L 164.5 45.0 L 173.0 45.0 L 173.0 27.0 L 181.5 27.0 L 181.5 45.0 L 190.0 45.0"/>
+    <text x="105.000" y="53.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">square wave — corners must be crisp 90 deg, no overshoot/ringing</text>
+    <path d="M 20.0 90.0 L 38.0 76.0 L 54.8 90.0 L 70.4 76.0 L 84.8 90.0 L 98.0 76.0 L 110.0 90.0 L 120.8 76.0 L 130.4 90.0 L 138.8 76.0 L 146.0 90.0 L 152.0 76.0 L 156.8 90.0 L 160.8 76.0 L 164.8 90.0 L 168.8 76.0 L 172.8 90.0 L 176.8 76.0 L 180.8 90.0 L 184.8 76.0 L 188.8 90.0"/>
+    <text x="105.000" y="112.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">tightening zigzag — high-frequency reversals</text>
+    <path d="M 20.0 130.0 L 190.0 130.0 L 190.0 155.0"/>
+    <text x="105.000" y="165.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">long run into a hard corner — look for overshoot past the corner</text>
+    <text x="105.000" y="175.000" font-family="monospace" font-size="2.8" fill="#000" stroke="none" text-anchor="middle">PROCEDURE: plot at slow, default, and max speed; compare the three</text>
+  </g>
+</svg>

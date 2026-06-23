@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 02 — ORIENTATION KEY</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 02 — ORIENTATION KEY</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">origin · Y-flip · rotation · preview-vs-paper match</text>
+    <path d="M 60.0 60.0 L 72.0 60.0 L 72.0 168.0 L 120.0 168.0 L 120.0 180.0 L 60.0 180.0 Z"/>
+    <text x="62.000" y="56.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="start">this 'L' should read upright and forward</text>
+    <line x1="95.000" y1="100.000" x2="95.000" y2="78.000"/>
+    <line x1="95.000" y1="78.000" x2="92.000" y2="82.000"/>
+    <line x1="95.000" y1="78.000" x2="98.000" y2="82.000"/>
+    <text x="95.000" y="107.000" font-family="monospace" font-size="4" fill="#000" stroke="none" text-anchor="middle">UP</text>
+    <text x="12.000" y="16.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="start">TL</text>
+    <text x="198.000" y="16.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="end">TR</text>
+    <text x="12.000" y="285.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="start">BL</text>
+    <text x="198.000" y="285.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="end">BR</text>
+    <line x1="4.000" y1="4.000" x2="12.000" y2="4.000"/>
+    <line x1="4.000" y1="4.000" x2="4.000" y2="12.000"/>
+    <line x1="206.000" y1="4.000" x2="198.000" y2="4.000"/>
+    <line x1="206.000" y1="4.000" x2="206.000" y2="12.000"/>
+    <line x1="4.000" y1="293.000" x2="12.000" y2="293.000"/>
+    <line x1="4.000" y1="293.000" x2="4.000" y2="285.000"/>
+    <line x1="206.000" y1="293.000" x2="198.000" y2="293.000"/>
+    <line x1="206.000" y1="293.000" x2="206.000" y2="285.000"/>
+  </g>
+</svg>

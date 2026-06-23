@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 08 — PARSER MATRIX</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 08 — PARSER FEATURE MATRIX</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">SVG construct coverage — every cell must render its shape correctly and in place</text>
+    <text x="16.000" y="30.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">rect</text>
+    <rect x="18.000" y="35.000" width="12.000" height="12.000"/>
+    <rect x="16.000" y="32.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="30.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path L abs</text>
+    <path d="M 64.0 35.0 L 76.0 35.0 L 76.0 47.0 L 64.0 47.0 Z"/>
+    <rect x="62.000" y="32.000" width="40.000" height="36.000"/>
+    <text x="108.000" y="30.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path l rel</text>
+    <path d="m 110.0 35.0 l 12 0 l 0 12 l -12 0 z"/>
+    <rect x="108.000" y="32.000" width="40.000" height="36.000"/>
+    <text x="154.000" y="30.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path H/V</text>
+    <path d="M 156.0 35.0 H 168.0 V 47.0 H 156.0 Z"/>
+    <rect x="154.000" y="32.000" width="40.000" height="36.000"/>
+    <text x="16.000" y="82.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">polyline</text>
+    <polyline points="18.0,87.0 30.0,87.0 30.0,99.0 18.0,99.0 18.0,87.0"/>
+    <rect x="16.000" y="84.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="82.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">polygon</text>
+    <polygon points="64.0,87.0 76.0,87.0 76.0,99.0 64.0,99.0"/>
+    <rect x="62.000" y="84.000" width="40.000" height="36.000"/>
+    <text x="108.000" y="82.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">circle</text>
+    <circle cx="116.000" cy="93.000" r="6.000"/>
+    <rect x="108.000" y="84.000" width="40.000" height="36.000"/>
+    <text x="154.000" y="82.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">ellipse</text>
+    <ellipse cx="162.0" cy="93.0" rx="6" ry="4"/>
+    <rect x="154.000" y="84.000" width="40.000" height="36.000"/>
+    <text x="16.000" y="134.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path C</text>
+    <path d="M 18.0 151.0 C 18.0 139.0 30.0 139.0 30.0 151.0"/>
+    <rect x="16.000" y="136.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="134.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path S</text>
+    <path d="M 64.0 151.0 C 64.0 143.0 70.0 143.0 70.0 147.0 S 76.0 139.0 76.0 151.0"/>
+    <rect x="62.000" y="136.000" width="40.000" height="36.000"/>
+    <text x="108.000" y="134.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path Q</text>
+    <path d="M 110.0 151.0 Q 116.0 135.0 122.0 151.0"/>
+    <rect x="108.000" y="136.000" width="40.000" height="36.000"/>
+    <text x="154.000" y="134.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path T</text>
+    <path d="M 156.0 151.0 Q 159.0 141.0 162.0 145.0 T 168.0 151.0"/>
+    <rect x="154.000" y="136.000" width="40.000" height="36.000"/>
+    <text x="16.000" y="186.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">path A</text>
+    <path d="M 18.0 203.0 A 6 6 0 0 1 30.0 203.0"/>
+    <rect x="16.000" y="188.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="186.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">g translate</text>
+    <g transform="translate(66.0,193.0)"><path d="M 0.0 0.0 L 12.0 0.0 L 12.0 12.0 L 0.0 12.0 Z"/></g>
+    <rect x="62.000" y="188.000" width="40.000" height="36.000"/>
+    <text x="108.000" y="186.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">g scale 2x</text>
+    <g transform="translate(110.0,191.0) scale(2)"><path d="M 0 0 L 6 0 L 6 6 L 0 6 Z"/></g>
+    <rect x="108.000" y="188.000" width="40.000" height="36.000"/>
+    <text x="154.000" y="186.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">g rotate 45</text>
+    <g transform="translate(162.0,197.0) rotate(45)"><path d="M -5 -5 L 5 -5 L 5 5 L -5 5 Z"/></g>
+    <rect x="154.000" y="188.000" width="40.000" height="36.000"/>
+    <text x="16.000" y="238.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">matrix()</text>
+    <g transform="matrix(1,0,0,1,18.0,243.0)"><path d="M 0.0 0.0 L 12.0 0.0 L 12.0 12.0 L 0.0 12.0 Z"/></g>
+    <rect x="16.000" y="240.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="238.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">nested g</text>
+    <g transform="translate(64.0,243.0)"><g transform="translate(2,2)"><path d="M 0.0 0.0 L 12.0 0.0 L 12.0 12.0 L 0.0 12.0 Z"/></g></g>
+    <rect x="62.000" y="240.000" width="40.000" height="36.000"/>
+    <text x="108.000" y="238.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">fill IGNORED</text>
+    <rect x="110.0" y="243.0" width="12" height="12" fill="#000"/>
+    <rect x="108.000" y="240.000" width="40.000" height="36.000"/>
+    <text x="154.000" y="238.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">style= attr</text>
+    <rect x="156.0" y="243.0" width="12" height="12" style="fill:none;stroke:#000;stroke-width:0.3"/>
+    <rect x="154.000" y="240.000" width="40.000" height="36.000"/>
+    <text x="16.000" y="290.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">use/defs</text>
+    <defs><rect id="u18_295" x="0" y="0" width="12" height="12"/></defs><use href="#u18_295" x="18.0" y="295.0"/>
+    <rect x="16.000" y="292.000" width="40.000" height="36.000"/>
+    <text x="62.000" y="290.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="start">text</text>
+    <text x="64.0" y="303.0" font-size="6" fill="#000" stroke="none">Ag</text>
+    <rect x="62.000" y="292.000" width="40.000" height="36.000"/>
+    <text x="105.000" y="346.000" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="middle">straight cells = identical 12mm squares · curve cells = smooth arcs · rotate=diamond · fill cell = OUTLINE ONLY</text>
+  </g>
+</svg>

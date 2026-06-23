@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 05 — CLOSING LOOP</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 05 — CLOSING LOOP</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">skipped steps · cumulative drift · return-to-origin</text>
+    <path d="M 25.0 35.0 L 185.0 35.0 L 185.0 272.0 L 25.0 272.0 Z"/>
+    <circle cx="25.000" cy="35.000" r="1.500"/>
+    <text x="28.000" y="32.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="start">START / RETURN — perimeter must close here exactly</text>
+    <path d="M 37.0 47.0 L 173.0 47.0 L 173.0 62.2 L 37.0 62.2 L 37.0 77.4 L 173.0 77.4 L 173.0 92.6 L 37.0 92.6 L 37.0 107.9 L 173.0 107.9 L 173.0 123.1 L 37.0 123.1 L 37.0 138.3 L 173.0 138.3 L 173.0 153.5 L 37.0 153.5 L 37.0 168.7 L 173.0 168.7 L 173.0 183.9 L 37.0 183.9 L 37.0 199.1 L 173.0 199.1 L 173.0 214.4 L 37.0 214.4 L 37.0 229.6 L 173.0 229.6 L 173.0 244.8 L 37.0 244.8 L 37.0 260.0"/>
+    <text x="105.000" y="278.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">serpentine adds distance — drift shows as a misaligned close</text>
+  </g>
+</svg>

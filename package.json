@@ -13,6 +13,7 @@
     "build:web": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:bless": "BLESS=1 vitest run server/test/capture-harness.test.ts",
     "start": "NODE_ENV=production node server/dist/server/src/index.js"
   },
   "dependencies": {

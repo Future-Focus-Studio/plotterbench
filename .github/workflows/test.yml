@@ -1,0 +1,34 @@
+# CI test gate.
+#
+# Runs the pure-logic + headless capture/re-render suite (backlog tasks 05, 31)
+# on every push and pull request. The capture harness exercises the real driver
+# emitters against a virtual plotter, so protocol golden-file drift and
+# SVG-pipeline fidelity regressions are caught here with no hardware in the loop.
+#
+# A golden mismatch fails the build; if the change is intentional, re-record with
+# `npm run test:bless` locally and commit the updated goldens.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck server
+        run: npm run build:server
+      - name: Run tests
+        run: npm test

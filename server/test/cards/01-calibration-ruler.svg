@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 01 — CALIBRATION RULER</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 01 — CALIBRATION RULER</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">dimensional accuracy · steps-per-mm · X vs Y scale</text>
+    <line x1="20.000" y1="40.000" x2="120.000" y2="40.000"/>
+    <line x1="20.000" y1="40.000" x2="20.000" y2="36.000"/>
+    <text x="20.000" y="34.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="middle">0</text>
+    <line x1="30.000" y1="40.000" x2="30.000" y2="37.500"/>
+    <line x1="40.000" y1="40.000" x2="40.000" y2="37.500"/>
+    <line x1="50.000" y1="40.000" x2="50.000" y2="37.500"/>
+    <line x1="60.000" y1="40.000" x2="60.000" y2="37.500"/>
+    <line x1="70.000" y1="40.000" x2="70.000" y2="36.000"/>
+    <text x="70.000" y="34.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="middle">50</text>
+    <line x1="80.000" y1="40.000" x2="80.000" y2="37.500"/>
+    <line x1="90.000" y1="40.000" x2="90.000" y2="37.500"/>
+    <line x1="100.000" y1="40.000" x2="100.000" y2="37.500"/>
+    <line x1="110.000" y1="40.000" x2="110.000" y2="37.500"/>
+    <line x1="120.000" y1="40.000" x2="120.000" y2="36.000"/>
+    <text x="120.000" y="34.500" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="middle">100</text>
+    <text x="20.000" y="46.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="start">X axis — 100 mm, 10 mm ticks</text>
+    <line x1="20.000" y1="60.000" x2="20.000" y2="160.000"/>
+    <line x1="20.000" y1="60.000" x2="16.000" y2="60.000"/>
+    <text x="14.000" y="61.000" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="end">0</text>
+    <line x1="20.000" y1="70.000" x2="17.500" y2="70.000"/>
+    <line x1="20.000" y1="80.000" x2="17.500" y2="80.000"/>
+    <line x1="20.000" y1="90.000" x2="17.500" y2="90.000"/>
+    <line x1="20.000" y1="100.000" x2="17.500" y2="100.000"/>
+    <line x1="20.000" y1="110.000" x2="16.000" y2="110.000"/>
+    <text x="14.000" y="111.000" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="end">50</text>
+    <line x1="20.000" y1="120.000" x2="17.500" y2="120.000"/>
+    <line x1="20.000" y1="130.000" x2="17.500" y2="130.000"/>
+    <line x1="20.000" y1="140.000" x2="17.500" y2="140.000"/>
+    <line x1="20.000" y1="150.000" x2="17.500" y2="150.000"/>
+    <line x1="20.000" y1="160.000" x2="16.000" y2="160.000"/>
+    <text x="14.000" y="161.000" font-family="monospace" font-size="2.6" fill="#000" stroke="none" text-anchor="end">100</text>
+    <text x="23.000" y="110.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="start">Y axis — 100 mm</text>
+    <rect x="90.000" y="70.000" width="50.000" height="50.000"/>
+    <line x1="90.000" y1="70.000" x2="140.000" y2="120.000"/>
+    <text x="115.000" y="67.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">50 x 50 square</text>
+    <circle cx="115.000" cy="175.000" r="25.000"/>
+    <line x1="90.000" y1="175.000" x2="140.000" y2="175.000"/>
+    <line x1="115.000" y1="150.000" x2="115.000" y2="200.000"/>
+    <text x="115.000" y="208.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">d50 circle — must be round, not oval</text>
+  </g>
+</svg>

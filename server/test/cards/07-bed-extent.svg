@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 07 — BED EXTENT</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 07 — BED EXTENT</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">coordinate clipping · out-of-bounds — BED-SPECIFIC (210x297 mm)</text>
+    <rect x="1.000" y="1.000" width="208.000" height="295.000"/>
+    <line x1="2.000" y1="6.000" x2="10.000" y2="6.000"/>
+    <line x1="6.000" y1="2.000" x2="6.000" y2="10.000"/>
+    <line x1="200.000" y1="6.000" x2="208.000" y2="6.000"/>
+    <line x1="204.000" y1="2.000" x2="204.000" y2="10.000"/>
+    <line x1="2.000" y1="291.000" x2="10.000" y2="291.000"/>
+    <line x1="6.000" y1="287.000" x2="6.000" y2="295.000"/>
+    <line x1="200.000" y1="291.000" x2="208.000" y2="291.000"/>
+    <line x1="204.000" y1="287.000" x2="204.000" y2="295.000"/>
+    <line x1="99.000" y1="148.500" x2="111.000" y2="148.500"/>
+    <line x1="105.000" y1="142.500" x2="105.000" y2="154.500"/>
+    <text x="105.000" y="139.500" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">frame should reach all four corners without skipping/stalling</text>
+    <circle cx="105.000" cy="148.500" r="173.500"/>
+    <text x="105.000" y="160.500" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">this circle exceeds the page on purpose:</text>
+    <text x="105.000" y="166.500" font-family="monospace" font-size="2.8" fill="#000" stroke="none" text-anchor="middle">app must clip or refuse gracefully — never crash or run motors past limit</text>
+  </g>
+</svg>

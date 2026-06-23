@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210.0mm" height="297.0mm" viewBox="0 0 210.0 297.0">
+  <title>Plotterbench test card 10 — ACCEPTANCE ART</title>
+  <desc>Plotter QA diagnostic. Units = mm. Plot identically on every machine; grade by physical measurement.</desc>
+  <g fill="none" stroke="#000" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round">
+    <text x="105.000" y="14.000" font-family="monospace" font-size="5" fill="#000" stroke="none" text-anchor="middle">PLOTTERBENCH TEST CARD 10 — ACCEPTANCE ART (PLACEHOLDER)</text>
+    <text x="105.000" y="20.000" font-family="monospace" font-size="3.0" fill="#000" stroke="none" text-anchor="middle">integration gate — replace with a real piece you'd be proud to ship</text>
+    <text x="105.000" y="60.000" font-family="monospace" font-size="4.0" fill="#000" stroke="none" text-anchor="middle">Card 10 is NOT auto-generated.</text>
+    <text x="105.000" y="80.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">Plot a real, recognizable artwork here instead of this placeholder:</text>
+    <text x="105.000" y="87.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">mixed curves + straight runs + many subpaths + varied scale.</text>
+    <text x="105.000" y="94.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle"></text>
+    <text x="105.000" y="101.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">It catches emergent issues the diagnostic cards miss (path density,</text>
+    <text x="105.000" y="108.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">ordering, travel patterns of real work) and answers the only question</text>
+    <text x="105.000" y="115.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">that finally matters: would you ship this print?</text>
+    <text x="105.000" y="122.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle"></text>
+    <text x="105.000" y="129.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">Keep ONE fixed acceptance piece, versioned, plotted identically on every</text>
+    <text x="105.000" y="136.000" font-family="monospace" font-size="3.2" fill="#000" stroke="none" text-anchor="middle">machine — same rule as the diagnostic cards.</text>
+    <circle cx="105.000" cy="200.000" r="30.000"/>
+    <path d="M 75.0 200 Q 105.0 150 135.0 200"/>
+    <path d="M 75.0 200 Q 105.0 250 135.0 200"/>
+  </g>
+</svg>

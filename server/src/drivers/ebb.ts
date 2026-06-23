@@ -29,8 +29,11 @@ const EBB_PRODUCT_ID = "fd92";
 // motor steps per inch along each native (45°) axis — a published AxiDraw
 // hardware figure (EBB command reference / AxiDraw documentation).
 const EM_RESOLUTION_16X = 1;
-const STEP_SCALE = 2032; // steps per inch along a native motor axis, at 16X.
-const MM_PER_INCH = 25.4;
+// steps per inch along a native motor axis, at 16X. Exported so the headless
+// capture harness can invert SM step deltas back to millimetres when re-rendering
+// the EBB command stream (server/src/testing/rerender.ts, backlog task 31).
+export const STEP_SCALE = 2032;
+export const MM_PER_INCH = 25.4;
 
 // The EBB step generator's hard ceiling is 25 kHz (documented EBB hardware
 // limit); above it the board loses position. We cap a hair below (in steps per

@@ -951,7 +951,19 @@ export default function App() {
   };
 
   const progressPct = progress && progress.polylineCount
-    ? Math.min(100, (progress.polylineIndex / progress.polylineCount) * 100)
+    ? Math.min(100,
+        ((progress.polylineIndex + (progress.segmentCount
+          ? progress.segmentIndex / progress.segmentCount
+          : 0)) / progress.polylineCount) * 100)
+    : 0;
+
+  // polylineIndex is 0-based while drawing; show a 1-based count to humans so a
+  // single-stroke job reads "1/1" instead of "0/1". Terminal phases already
+  // report a final index (done sends count/count), so leave those untouched.
+  const progressIndexDisplay = progress
+    ? (progress.phase === "drawing" || progress.phase === "paused"
+        ? Math.min(progress.polylineIndex + 1, progress.polylineCount)
+        : progress.polylineIndex)
     : 0;
 
   const plotting = progress?.phase === "preparing" || progress?.phase === "drawing";
@@ -1440,7 +1452,7 @@ export default function App() {
         {progress && (
           <>
             <div className="status">
-              {progress.phase}: {progress.polylineIndex}/{progress.polylineCount}
+              {progress.phase}: {progressIndexDisplay}/{progress.polylineCount}
             </div>
             <div className="progress-bar"><div style={{ width: `${progressPct}%` }} /></div>
           </>

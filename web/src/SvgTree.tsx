@@ -16,6 +16,10 @@ const DRAWABLE_TAGS = new Set([
   "g","path","rect","circle","ellipse","line","polyline","polygon","text","image","use",
 ]);
 
+/** A group with more children than this isn't expanded into per-element tree
+ *  nodes — it would build 100k+ objects (freezing load) and be unusable. */
+const MAX_TREE_CHILDREN = 2000;
+
 export function buildSvgTree(svgText: string): SvgTreeNode[] {
   const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
   const root = doc.querySelector("svg");
@@ -26,22 +30,32 @@ export function buildSvgTree(svgText: string): SvgTreeNode[] {
     if (SKIP_TAGS.has(tag)) return null;
 
     const children: SvgTreeNode[] = [];
-    let ci = 0;
-    for (const child of el.children) {
-      const n = build(child, [...path, ci]);
-      if (n) children.push(n);
-      ci++;
+    // Don't expand groups with an enormous number of children into individual
+    // nodes — e.g. dithered output is one <g> with 100k+ <line>s. Building a node
+    // per element freezes load and yields an unusable tree. Keep the group (so
+    // it can still be hidden/recolored as a whole); just don't drill into it.
+    const suppressedChildren = el.children.length > MAX_TREE_CHILDREN;
+    if (!suppressedChildren) {
+      let ci = 0;
+      for (const child of el.children) {
+        const n = build(child, [...path, ci]);
+        if (n) children.push(n);
+        ci++;
+      }
     }
 
-    if (!DRAWABLE_TAGS.has(tag) && children.length === 0) return null;
+    if (!DRAWABLE_TAGS.has(tag) && children.length === 0 && !suppressedChildren) return null;
 
     const key = path.join("-");
-    const label =
+    const baseLabel =
       el.getAttribute("inkscape:label") ??
       el.getAttribute("id") ??
       (el.getAttribute("class")
         ? `${tag}.${el.getAttribute("class")!.trim().split(/\s+/)[0]}`
         : tag);
+    const label = suppressedChildren
+      ? `${baseLabel} (${el.children.length.toLocaleString()} items)`
+      : baseLabel;
 
     return { key, tag, label, children };
   }

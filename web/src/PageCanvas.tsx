@@ -29,6 +29,9 @@ interface Props {
 
 const PADDING = 32;
 const MIN_SIZE_MM = 1;
+/** Above this many SVG elements, the preview is rasterized to one <image>
+ *  instead of injecting every node as live DOM (which freezes the UI). */
+const RASTER_NODE_THRESHOLD = 5000;
 /** Handle size in screen pixels — converted to page-mm using current scale. */
 const HANDLE_PX = 10;
 
@@ -189,16 +192,44 @@ export default function PageCanvas({
 
   // ---- Render SVG content inside the page ----
   useEffect(() => {
-    if (!wrapperRef.current) return;
+    const wrap = wrapperRef.current;
+    if (!wrap) return;
     if (!svg) {
-      wrapperRef.current.innerHTML = "";
+      wrap.innerHTML = "";
       return;
     }
     const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
     const root = doc.querySelector("svg");
-    wrapperRef.current.innerHTML = root ? root.innerHTML : "";
+    if (!root) {
+      wrap.innerHTML = "";
+      return;
+    }
+
+    // Very large SVGs (e.g. dithered output with 100k+ <line>s) would freeze the
+    // main thread if injected as live DOM and restyled node-by-node — and the
+    // node mass keeps every later interaction sluggish. Past a threshold,
+    // rasterize the whole thing into one <image> the browser paints off the
+    // critical path; the thin-line look is applied with a single <style> rule
+    // instead of mutating every element.
+    const nodeCount = root.getElementsByTagName("*").length;
+    if (nodeCount > RASTER_NODE_THRESHOLD) {
+      if (thinLinePreview) {
+        const style = doc.createElementNS("http://www.w3.org/2000/svg", "style");
+        style.textContent =
+          "*{fill:none!important;stroke:#222!important;stroke-width:0.3!important;" +
+          "opacity:1!important;visibility:visible!important;display:inline!important}";
+        root.insertBefore(style, root.firstChild);
+      }
+      const serialized = new XMLSerializer().serializeToString(root);
+      const url = URL.createObjectURL(new Blob([serialized], { type: "image/svg+xml" }));
+      wrap.innerHTML =
+        `<image href="${url}" x="0" y="0" width="${svgViewBoxWidth}" height="${svgViewBoxHeight}" preserveAspectRatio="none"></image>`;
+      return () => URL.revokeObjectURL(url);
+    }
+
+    wrap.innerHTML = root.innerHTML;
     if (thinLinePreview) {
-      const all = wrapperRef.current.querySelectorAll<SVGElement>("*");
+      const all = wrap.querySelectorAll<SVGElement>("*");
       for (const el of all) {
         el.removeAttribute("display");
         el.removeAttribute("visibility");
@@ -213,7 +244,7 @@ export default function PageCanvas({
         el.removeAttribute("stroke-opacity");
       }
     }
-  }, [svg, thinLinePreview]);
+  }, [svg, thinLinePreview, svgViewBoxWidth, svgViewBoxHeight]);
 
   const sx = svgViewBoxWidth > 0 ? svgWidthMm / svgViewBoxWidth : 1;
   const sy = svgViewBoxHeight > 0 ? svgHeightMm / svgViewBoxHeight : 1;

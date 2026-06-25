@@ -94,11 +94,23 @@ const DEFAULTS: SavedSettings = {
   layerColors: {},
 };
 
+// SVGs larger than this aren't persisted to localStorage or inlined as a
+// thumbnail data URL: a multi-megabyte SVG (e.g. 100k+ dithered <line>s) blows
+// the ~5MB localStorage quota and re-freezes the UI on every refresh when
+// restored. Such files are simply re-loaded by hand instead.
+const MAX_INLINE_SVG_BYTES = 1_500_000;
+
 function loadSettings(): SavedSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...JSON.parse(raw) };
+    const saved: SavedSettings = { ...DEFAULTS, ...JSON.parse(raw) };
+    // Drop an oversized restored SVG so it doesn't re-freeze the app on load.
+    if (saved.parsed && saved.parsed.text.length > MAX_INLINE_SVG_BYTES) {
+      saved.parsed = null;
+      saved.fileName = "";
+    }
+    return saved;
   } catch { return DEFAULTS; }
 }
 
@@ -117,7 +129,17 @@ function useSettings(): [SavedSettings, SetSetting] {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      try {
+        // Don't persist an oversized SVG — it overflows the quota (which would
+        // throw and drop ALL settings) and slows refresh. Save it minus `parsed`.
+        const toSave =
+          settings.parsed && settings.parsed.text.length > MAX_INLINE_SVG_BYTES
+            ? { ...settings, parsed: null }
+            : settings;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
+      } catch {
+        /* quota or serialization error — skip this save */
+      }
     }, 300);
     return () => clearTimeout(t);
   }, [settings]);
@@ -724,8 +746,14 @@ export default function App() {
 
   // Render the loaded SVG as an <img> data URL for the sidebar thumbnail.
   // Using <img> (not innerHTML) keeps the untrusted SVG sandboxed — no scripts.
+  // Skip it for very large SVGs: encoding multi-MB text into a data URL (and
+  // decoding it for a tiny thumbnail) is a needless main-thread hit. The main
+  // canvas still shows the (rasterized) preview.
   const thumbUrl = useMemo(
-    () => (parsed ? `data:image/svg+xml;utf8,${encodeURIComponent(parsed.text)}` : null),
+    () =>
+      parsed && parsed.text.length <= MAX_INLINE_SVG_BYTES
+        ? `data:image/svg+xml;utf8,${encodeURIComponent(parsed.text)}`
+        : null,
     [parsed],
   );
 

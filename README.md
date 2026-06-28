@@ -32,7 +32,7 @@ hardware · ❌ **Not supported**: different protocol, out of current scope.
 
 ## Prerequisites
 
-- Node 18+
+- Node 20 LTS or newer (enforced; older versions are rejected at install and startup)
 - A supported plotter plugged in via USB:
   - a **DrawCore** plotter (UUNA TEK / iDraw) — enumerates as a CH340 serial port, or
   - an **AxiDraw / EiBotBoard** plotter — enumerates as a USB-CDC modem port.

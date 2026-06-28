@@ -619,6 +619,10 @@ export default function App() {
 
   const [progress, setProgress] = useState<ProgressState>(null);
   const [plotPolylines, setPlotPolylines] = useState<{ x: number; y: number }[][] | null>(null);
+  // True while the post-transform/optimize path preview is being computed for a
+  // freshly loaded/changed SVG (debounce + async plan), so the instruction list
+  // can say "Preparing paths…" instead of the misleading "Run Plot" empty state.
+  const [planLoading, setPlanLoading] = useState(false);
   const [hoveredPolyline, setHoveredPolyline] = useState<number | null>(null);
   // Pre-plot origin confirmation gate (see the "Begin plot" modal below).
   const [originConfirmOpen, setOriginConfirmOpen] = useState(false);
@@ -1007,10 +1011,12 @@ export default function App() {
     if (plotInProgressRef.current) return;
     if (!visibleSvg) {
       setPlotPolylines(null);
+      setPlanLoading(false);
       setProgress(null);
       return;
     }
     let cancelled = false;
+    setPlanLoading(true);
     const handle = setTimeout(() => {
       api.plan(visibleSvg, plotOptions)
         .then((r) => {
@@ -1018,7 +1024,8 @@ export default function App() {
           setPlotPolylines(r.polylines);
           setProgress(null);
         })
-        .catch(() => { /* leave existing list in place */ });
+        .catch(() => { /* leave existing list in place */ })
+        .finally(() => { if (!cancelled) setPlanLoading(false); });
     }, 250);
     return () => { cancelled = true; clearTimeout(handle); };
   }, [visibleSvg, plotOptions]);
@@ -1388,6 +1395,7 @@ export default function App() {
         <div className="instr-panel">
           <InstructionList
             polylines={plotPolylines}
+            loading={planLoading}
             currentIndex={progress?.polylineIndex ?? 0}
             drawing={plotting || paused}
             hoveredIndex={hoveredPolyline}

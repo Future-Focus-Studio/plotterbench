@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   polylines: { x: number; y: number }[][] | null;
+  /** True while the path preview is still being computed for a new/changed SVG. */
+  loading?: boolean;
   /** Index of the polyline currently drawing (or stopped at). */
   currentIndex: number;
   /** True while a plot is actively running. */
@@ -29,6 +31,7 @@ function polylineLengthMm(pl: { x: number; y: number }[]): number {
 
 export default function InstructionList({
   polylines,
+  loading = false,
   currentIndex,
   drawing,
   hoveredIndex,
@@ -106,7 +109,13 @@ export default function InstructionList({
       onMouseLeave={() => onHover(null)}
     >
       {total === 0 ? (
-        <div className="instr-empty">Run Plot to view instructions.</div>
+        <div className="instr-empty">
+          {loading
+            ? "Preparing paths…"
+            : polylines === null
+              ? "Load an SVG to view paths."
+              : "No paths to plot."}
+        </div>
       ) : (
         <div className="instr-spacer" style={{ height: totalH }}>
           {rows}

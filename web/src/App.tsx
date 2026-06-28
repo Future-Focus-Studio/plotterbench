@@ -284,6 +284,7 @@ const STROKE_GLYPHS: Record<string, [number, number][][]> = {
   "8": [[[0,0],[1,0],[1,1],[0,1],[0,0]],[[0,0.5],[1,0.5]]],
   "9": [[[1,1],[1,0],[0,0],[0,0.5],[1,0.5]]],
   ".": [[[0.4,1],[0.6,1]]],
+  "\"": [[[0.25,0],[0.25,0.3]],[[0.55,0],[0.55,0.3]]],
   "U": [[[0,0],[0,1],[1,1],[1,0]]],
   "P": [[[0,1],[0,0],[1,0],[1,0.5],[0,0.5]]],
   "D": [[[0,1],[0,0],[0.6,0],[1,0.4],[1,0.6],[0.6,1],[0,1]]],
@@ -327,9 +328,10 @@ function strokeText(
 }
 
 /**
- * Size-measurement calibration pattern: nested centered circle/squares with a
- * 1/8" ruler, up/down orientation arrows, and a page-perimeter rectangle whose
- * dimensions are labelled in inches. All geometry is derived from page size.
+ * Size-measurement calibration pattern: a centered whole-inch square (sized to
+ * fit the page) with a numbered 1/8" ruler, up/down orientation arrows, and a
+ * page-perimeter rectangle whose dimensions are labelled in inches. All geometry
+ * is derived from page size.
  */
 function buildSizeMeasurement(w: number, h: number): string {
   const IN = 25.4;
@@ -341,45 +343,65 @@ function buildSizeMeasurement(w: number, h: number): string {
   const line = (x1: number, y1: number, x2: number, y2: number, sw = 0.3) =>
     `<polyline points="${x1.toFixed(2)},${y1.toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}" fill="none" stroke="black" stroke-width="${sw}"/>`;
 
-  // Center circle (2" diameter) and concentric 4" + 6" squares.
-  els.push(`<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${(1 * IN).toFixed(2)}" fill="none" stroke="black" stroke-width="0.4"/>`);
-  const s4 = 4 * IN;
-  els.push(rect(cx - s4 / 2, cy - s4 / 2, s4, s4));
-  const s6 = 6 * IN;
-  const x6 = cx - s6 / 2, y6 = cy - s6 / 2;
-  els.push(rect(x6, y6, s6, s6));
+  // Perimeter rectangle is 1" inset from the page edges; the reference square is
+  // the largest whole-inch square that fits inside it while leaving a side gap
+  // for the orientation arrows.
+  const inset = 1 * IN;
+  const innerW = w - 2 * inset, innerH = h - 2 * inset;
+  const sideGap = 0.7 * IN; // breathing room between the square and the perimeter
+  const maxSide = Math.min(innerW - 2 * sideGap, innerH - 0.5 * IN);
+  const sqIn = Math.max(1, Math.floor(maxSide / IN));
+  const sq = sqIn * IN;
+  const sx = cx - sq / 2, sy = cy - sq / 2;
+  els.push(rect(sx, sy, sq, sq));
 
-  // 1/8" ruler ticks inward along the top and left edges of the 6" square
-  // (longer tick every full inch).
+  // 1/8" ruler ticks inward along the top and left edges of the square (longer
+  // tick every full inch, labelled with its inch count).
   const step = IN / 8;
-  for (let i = 0; i <= 6 * 8; i++) {
-    const len = i % 8 === 0 ? 4 : 2;
-    els.push(line(x6 + i * step, y6, x6 + i * step, y6 + len));
-    els.push(line(x6, y6 + i * step, x6 + len, y6 + i * step));
+  const tickSize = 0.1 * IN;
+  for (let i = 0; i <= sqIn * 8; i++) {
+    const major = i % 8 === 0;
+    const len = major ? 4 : 2;
+    els.push(line(sx + i * step, sy, sx + i * step, sy + len));
+    els.push(line(sx, sy + i * step, sx + len, sy + i * step));
+    // Number each full-inch tick just inside the edge (skip the shared corner).
+    if (major && i > 0) {
+      const inch = (i / 8).toString();
+      els.push(strokeText(inch, sx + i * step, sy + len + 1, tickSize, "middle"));
+      els.push(strokeText(inch, sx + len + 1, sy + i * step - tickSize / 2, tickSize, "start"));
+    }
   }
 
-  // Orientation arrows in the side gaps: UP on the right, DOWN on the left.
+  // Orientation arrows stacked in the outer right margin (between the perimeter
+  // rectangle and the page edge): UP near the top, DOWN near the bottom.
   const arrLen = 2 * IN, headW = 2, headL = 4;
-  const rax = (x6 + s6 + (w - IN)) / 2; // centered between the square and perimeter
-  const lax = (IN + x6) / 2;
-  // right: arrow pointing up
-  els.push(line(rax, cy + arrLen / 2, rax, cy - arrLen / 2, 0.4));
-  els.push(line(rax, cy - arrLen / 2, rax - headW, cy - arrLen / 2 + headL, 0.4));
-  els.push(line(rax, cy - arrLen / 2, rax + headW, cy - arrLen / 2 + headL, 0.4));
-  els.push(strokeText("UP", rax, cy + arrLen / 2 + 0.1 * IN, 0.2 * IN, "middle"));
-  // left: arrow pointing down
-  els.push(line(lax, cy - arrLen / 2, lax, cy + arrLen / 2, 0.4));
-  els.push(line(lax, cy + arrLen / 2, lax - headW, cy + arrLen / 2 - headL, 0.4));
-  els.push(line(lax, cy + arrLen / 2, lax + headW, cy + arrLen / 2 - headL, 0.4));
-  els.push(strokeText("DOWN", lax, cy + arrLen / 2 + 0.1 * IN, 0.2 * IN, "middle"));
+  const rax = w - inset / 2; // centered in the outer right margin
+  const upCy = inset + arrLen, downCy = h - inset - arrLen; // near top / bottom
+  // UP arrow (points up)
+  els.push(line(rax, upCy + arrLen / 2, rax, upCy - arrLen / 2, 0.4));
+  els.push(line(rax, upCy - arrLen / 2, rax - headW, upCy - arrLen / 2 + headL, 0.4));
+  els.push(line(rax, upCy - arrLen / 2, rax + headW, upCy - arrLen / 2 + headL, 0.4));
+  els.push(strokeText("UP", rax, upCy + arrLen / 2 + 0.1 * IN, 0.2 * IN, "middle"));
+  // DOWN arrow (points down)
+  els.push(line(rax, downCy - arrLen / 2, rax, downCy + arrLen / 2, 0.4));
+  els.push(line(rax, downCy + arrLen / 2, rax - headW, downCy + arrLen / 2 - headL, 0.4));
+  els.push(line(rax, downCy + arrLen / 2, rax + headW, downCy + arrLen / 2 - headL, 0.4));
+  els.push(strokeText("DOWN", rax, downCy - arrLen / 2 - 0.3 * IN, 0.2 * IN, "middle"));
 
-  // Perimeter rectangle 1" inset from the page edges, with its width/height
-  // labelled in inches in the top and left margins.
-  const inset = 1 * IN;
-  els.push(rect(inset, inset, w - 2 * inset, h - 2 * inset, 0.5));
-  const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
+  // Perimeter rectangle, with its width/height labelled in inches in the top
+  // and left margins.
+  els.push(rect(inset, inset, innerW, innerH, 0.5));
+  // Whole-inch ruler ticks inward along the top and left edges of the perimeter.
+  for (let i = 0; i <= Math.floor(innerW / IN); i++)
+    els.push(line(inset + i * IN, inset, inset + i * IN, inset + 3));
+  for (let i = 0; i <= Math.floor(innerH / IN); i++)
+    els.push(line(inset, inset + i * IN, inset + 3, inset + i * IN));
+  const fmt = (n: number) => (Math.round(n * 1000) / 1000).toString() + "\"";
   els.push(strokeText(fmt(w / IN - 2), cx, inset / 2 - 0.15 * IN, 0.3 * IN, "middle"));
-  els.push(strokeText(fmt(h / IN - 2), inset / 2, cy - 0.15 * IN, 0.3 * IN, "middle"));
+  // Rotate the left label to read bottom-to-top so it always fits the narrow
+  // margin regardless of how many digits the height has.
+  const leftLabel = strokeText(fmt(h / IN - 2), inset / 2, cy - 0.15 * IN, 0.3 * IN, "middle");
+  els.push(`<g transform="rotate(-90 ${(inset / 2).toFixed(2)} ${cy.toFixed(2)})">\n${leftLabel}\n</g>`);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}mm" height="${h}mm" viewBox="0 0 ${w} ${h}">\n${els.join("\n")}\n</svg>`;
 }

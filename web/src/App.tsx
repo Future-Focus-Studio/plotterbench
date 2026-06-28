@@ -751,7 +751,7 @@ export default function App() {
     }
     onSvgLoaded(p);
     setFileName(file.name);
-    setStatus({ msg: `Loaded ${file.name} (${p.viewBoxWidth.toFixed(0)}×${p.viewBoxHeight.toFixed(0)} units)`, kind: "ok" });
+    setStatus(null);
   }, [onSvgLoaded]);
 
   // Unload the current SVG and clear everything derived from it.
@@ -938,8 +938,6 @@ export default function App() {
     }
   };
 
-  const penUp = async () => { try { await api.pen("up"); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
-  const penDown = async () => { try { await api.pen("down"); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
   const home = async () => { try { await api.home(); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
   const motorsOff = async () => { try { await api.motors(false); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
 
@@ -990,6 +988,11 @@ export default function App() {
 
   const plotting = progress?.phase === "preparing" || progress?.phase === "drawing";
   const paused = progress?.phase === "paused";
+  // While a plot is in flight (running or paused), lock every control that
+  // would alter the instructions being plotted — page size, calibration, the
+  // loaded SVG, sizing/offset/rotation, path modifications, pen settings, and
+  // the optimize toggle. Pausing does not unlock: Resume continues the same job.
+  const plotActive = plotting || paused;
 
   // Live preview of the instruction list. Whenever the visible SVG or plot
   // options change, re-derive the post-transform/post-optimize polylines so
@@ -1073,6 +1076,7 @@ export default function App() {
               step="0.01" min="0.1" decimals={2}
               value={mmToIn(pageW)}
               onCommit={(v) => setPageW(inToMm(v))}
+              disabled={plotActive}
             />
           </div>
           <div className="field-grid-cell label">Height (in)</div>
@@ -1082,6 +1086,7 @@ export default function App() {
               step="0.01" min="0.1" decimals={2}
               value={mmToIn(pageH)}
               onCommit={(v) => setPageH(inToMm(v))}
+              disabled={plotActive}
             />
           </div>
           <div className="field-grid-cell label">Background</div>
@@ -1115,6 +1120,7 @@ export default function App() {
               className="field-select"
               value={testPattern}
               onChange={(e) => setTestPattern(e.target.value)}
+              disabled={plotActive}
             >
               <option value="none">None</option>
               {Object.entries(TEST_PATTERNS).map(([id, p]) => (
@@ -1129,12 +1135,12 @@ export default function App() {
         <h2>SVG</h2>
         {parsed ? (
           <div
-            className={`svg-card${dragHover ? " hover" : ""}`}
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragHover(true); }}
+            className={`svg-card${dragHover ? " hover" : ""}${plotActive ? " disabled" : ""}`}
+            onClick={plotActive ? undefined : () => fileInputRef.current?.click()}
+            onDragOver={(e) => { if (plotActive) return; e.preventDefault(); setDragHover(true); }}
             onDragLeave={() => setDragHover(false)}
-            onDrop={onDrop}
-            title="Click or drop to replace"
+            onDrop={plotActive ? undefined : onDrop}
+            title={plotActive ? "Can't replace while plotting" : "Click or drop to replace"}
           >
             {thumbUrl && (
               <img
@@ -1155,17 +1161,18 @@ export default function App() {
             <button
               className="svg-remove"
               onClick={(e) => { e.stopPropagation(); clearSvg(); }}
+              disabled={plotActive}
               title="Remove SVG"
               aria-label="Remove SVG"
             >✕</button>
           </div>
         ) : (
           <div
-            className={`file-drop${dragHover ? " hover" : ""}`}
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragHover(true); }}
+            className={`file-drop${dragHover ? " hover" : ""}${plotActive ? " disabled" : ""}`}
+            onClick={plotActive ? undefined : () => fileInputRef.current?.click()}
+            onDragOver={(e) => { if (plotActive) return; e.preventDefault(); setDragHover(true); }}
             onDragLeave={() => setDragHover(false)}
-            onDrop={onDrop}
+            onDrop={plotActive ? undefined : onDrop}
           >
             Drop SVG here · click to browse
           </div>
@@ -1179,7 +1186,7 @@ export default function App() {
         />
 
         {svgTree.length > 0 && (
-          <div className={testPatternOn ? "dimmed" : undefined}>
+          <div className={`${testPatternOn ? "dimmed" : ""}${plotActive ? " edits-locked" : ""}`.trim() || undefined}>
           <SvgTree
             nodes={svgTree}
             expanded={expandedKeys}
@@ -1222,28 +1229,28 @@ export default function App() {
               </div>
               <div className="field-grid-cell label">Width (mm)</div>
               <div className="field-grid-cell">
-                <NumberInput className="field-input" step="0.1" live value={widthMm} onCommit={setWidthLocked} />
+                <NumberInput className="field-input" step="0.1" live value={widthMm} onCommit={setWidthLocked} disabled={plotActive} />
               </div>
               <div className="field-grid-cell label">Height (mm)</div>
               <div className="field-grid-cell">
-                <NumberInput className="field-input" step="0.1" live value={heightMm} onCommit={setHeightLocked} />
+                <NumberInput className="field-input" step="0.1" live value={heightMm} onCommit={setHeightLocked} disabled={plotActive} />
               </div>
               <label className="field-grid-cell label" htmlFor="cb-lockcenter">Lock SVG to center</label>
               <div className="field-grid-cell">
                 <input id="cb-lockcenter" className="field-checkbox" type="checkbox"
-                  checked={lockCenter} onChange={(e) => setLockCenter(e.target.checked)} />
+                  checked={lockCenter} onChange={(e) => setLockCenter(e.target.checked)} disabled={plotActive} />
               </div>
               <div className="field-grid-cell label">Offset X (mm)</div>
               <div className="field-grid-cell">
-                <NumberInput className="field-input" step="0.5" decimals={1} value={offsetX} onCommit={setOffsetX} disabled={lockCenter} />
+                <NumberInput className="field-input" step="0.5" decimals={1} value={offsetX} onCommit={setOffsetX} disabled={lockCenter || plotActive} />
               </div>
               <div className="field-grid-cell label">Offset Y (mm)</div>
               <div className="field-grid-cell">
-                <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter} />
+                <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter || plotActive} />
               </div>
               <div className="field-grid-cell label">Rotate 90 degrees</div>
               <div className="field-grid-cell">
-                <button className="field-icon-btn" onClick={rotate90} title="Rotate 90°" aria-label="Rotate 90 degrees">
+                <button className="field-icon-btn" onClick={rotate90} disabled={plotActive} title="Rotate 90°" aria-label="Rotate 90 degrees">
                   <RefreshIcon />
                 </button>
               </div>
@@ -1259,19 +1266,19 @@ export default function App() {
               <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>
               <div className="field-grid-cell">
                 <input id="cb-reverse" className="field-checkbox" type="checkbox"
-                  checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} />
+                  checked={reversePaths} onChange={(e) => setReversePaths(e.target.checked)} disabled={plotActive} />
               </div>
               <label className="field-grid-cell label" htmlFor="cb-flipx">Flip X</label>
               <div className="field-grid-cell">
-                <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} />
+                <input id="cb-flipx" className="field-checkbox" type="checkbox" checked={flipX} onChange={(e) => setFlipX(e.target.checked)} disabled={plotActive} />
               </div>
               <label className="field-grid-cell label" htmlFor="cb-flipy">Flip Y</label>
               <div className="field-grid-cell">
-                <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} />
+                <input id="cb-flipy" className="field-checkbox" type="checkbox" checked={flipY} onChange={(e) => setFlipY(e.target.checked)} disabled={plotActive} />
               </div>
               <label className="field-grid-cell label" htmlFor="cb-swapxy">Swap X/Y</label>
               <div className="field-grid-cell">
-                <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} />
+                <input id="cb-swapxy" className="field-checkbox" type="checkbox" checked={swapXY} onChange={(e) => setSwapXY(e.target.checked)} disabled={plotActive} />
               </div>
             </div>
           </div>
@@ -1290,10 +1297,10 @@ export default function App() {
           svgHeightMm={displayHeightMm}
           offsetXMm={displayOffsetX}
           offsetYMm={displayOffsetY}
-          onOffsetChange={(x, y) => { if (testPatternOn || lockCenter) return; setOffsetX(x); setOffsetY(y); }}
+          onOffsetChange={(x, y) => { if (testPatternOn || lockCenter || plotActive) return; setOffsetX(x); setOffsetY(y); }}
           lockedAspect={displayParsed ? displayParsed.naturalWidthMm / displayParsed.naturalHeightMm : null}
           onSizeChange={(w, h, ox, oy) => {
-            if (testPatternOn) return;
+            if (testPatternOn || plotActive) return;
             setWidthMm(Math.round(w * 10) / 10);
             setHeightMm(Math.round(h * 10) / 10);
             setOffsetX(Math.round(ox * 10) / 10);
@@ -1315,27 +1322,27 @@ export default function App() {
         <div className="field-grid">
           <div className="field-grid-cell label">Draw (mm/s)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} />
+            <NumberInput className="field-input" min="1" value={drawSpeed} onCommit={setDrawSpeed} disabled={plotActive} />
           </div>
           <div className="field-grid-cell label">Travel (mm/s)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} />
+            <NumberInput className="field-input" min="1" value={travelSpeed} onCommit={setTravelSpeed} disabled={plotActive} />
           </div>
           <div className="field-grid-cell label">Pen-down delay (ms)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} />
+            <NumberInput className="field-input" min="0" step="10" value={penDownDelayMs} onCommit={setPenDownDelayMs} disabled={plotActive} />
           </div>
           <div className="field-grid-cell label">Pen-up delay (ms)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} />
+            <NumberInput className="field-input" min="0" step="10" value={penUpDelayMs} onCommit={setPenUpDelayMs} disabled={plotActive} />
           </div>
           <div className="field-grid-cell label" title={zHint}>Pen-up Z</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} disabled={zFieldsDisabled} title={zHint} />
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penUpZ} onCommit={setPenUpZ} disabled={zFieldsDisabled || plotActive} title={zHint} />
           </div>
           <div className="field-grid-cell label" title={zHint}>Pen-down Z</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} disabled={zFieldsDisabled} title={zHint} />
+            <NumberInput className="field-input" min="0" max="10" step="0.5" value={penDownZ} onCommit={setPenDownZ} disabled={zFieldsDisabled || plotActive} title={zHint} />
           </div>
           <div className="field-grid-cell label" title={zHint}>Pen speed up/down (mm/s)</div>
           <div className="field-grid-cell">
@@ -1344,17 +1351,17 @@ export default function App() {
               min="1" step="1" decimals={1}
               value={penSpeedMmPerMin / 60}
               onCommit={(v) => setPenSpeedMmPerMin(Math.max(1, Math.round(v * 60)))}
-              disabled={zFieldsDisabled}
+              disabled={zFieldsDisabled || plotActive}
               title={zHint}
             />
           </div>
           <div className="field-grid-cell label" title={servoHint}>Pen-up height (%)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="100" step="1" value={penUpPercent} onCommit={setPenUpPercent} disabled={servoFieldsDisabled} title={servoHint} />
+            <NumberInput className="field-input" min="0" max="100" step="1" value={penUpPercent} onCommit={setPenUpPercent} disabled={servoFieldsDisabled || plotActive} title={servoHint} />
           </div>
           <div className="field-grid-cell label" title={servoHint}>Pen-down height (%)</div>
           <div className="field-grid-cell">
-            <NumberInput className="field-input" min="0" max="100" step="1" value={penDownPercent} onCommit={setPenDownPercent} disabled={servoFieldsDisabled} title={servoHint} />
+            <NumberInput className="field-input" min="0" max="100" step="1" value={penDownPercent} onCommit={setPenDownPercent} disabled={servoFieldsDisabled || plotActive} title={servoHint} />
           </div>
         </div>
         </div>
@@ -1367,7 +1374,7 @@ export default function App() {
               <label className="field-grid-cell label" htmlFor="cb-optimize">Optimize paths</label>
               <div className="field-grid-cell">
                 <input id="cb-optimize" className="field-checkbox" type="checkbox"
-                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} />
+                  checked={optimizePaths} onChange={(e) => setOptimizePaths(e.target.checked)} disabled={plotActive} />
               </div>
             </div>
             {optimizePaths && (
@@ -1393,6 +1400,9 @@ export default function App() {
 
         <div className="section">
         <h2>Controls</h2>
+        {!conn.connected && (
+          <div className="status warn ctrl-disabled-note">Disabled: No Plotter Connected</div>
+        )}
         <div className="ctrl-row">
           <button
             className="secondary"
@@ -1400,15 +1410,11 @@ export default function App() {
               try { await api.setOrigin(); setStatus({ msg: "Origin set at current position", kind: "ok" }); }
               catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); }
             }}
-            disabled={!conn.connected}
+            disabled={!conn.connected || plotActive}
           >
             Set origin here
           </button>
-          <button className="secondary" onClick={home} disabled={!conn.connected}>Go to 0,0</button>
-        </div>
-        <div className="ctrl-row">
-          <button className="secondary" onClick={penUp} disabled={!conn.connected}>Pen up</button>
-          <button className="secondary" onClick={penDown} disabled={!conn.connected}>Pen down</button>
+          <button className="secondary" onClick={home} disabled={!conn.connected || plotActive}>Go to origin</button>
         </div>
         <div className="ctrl-row">
           <div className="ctrl-plot">
@@ -1431,7 +1437,7 @@ export default function App() {
               </>
             )}
           </div>
-          <button className="secondary" onClick={motorsOff} disabled={!conn.connected}>Motors off</button>
+          <button className="secondary" onClick={motorsOff} disabled={!conn.connected || plotActive}>Motors off</button>
         </div>
 
         <Modal

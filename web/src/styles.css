@@ -185,6 +185,9 @@ h2:first-child { margin-top: 0; }
 label.field-grid-cell { cursor: pointer; }
 /* Grayed-out, non-interactive controls (e.g. while the test pattern is shown). */
 .dimmed { opacity: 0.4; pointer-events: none; }
+/* Custom (non-form) controls locked while a plot is running. */
+.edits-locked { opacity: 0.5; pointer-events: none; }
+.svg-card.disabled, .file-drop.disabled { opacity: 0.5; cursor: not-allowed; }
 .page-dims-bg { gap: 8px; }
 .page-bg-swatch {
   flex: 1;
@@ -247,6 +250,7 @@ button + button { margin-left: 6px; }
 .status { font-size: 12px; color: #8c8; margin-top: 8px; }
 .status.error { color: #f66; }
 .status.warn { color: #fd6; }
+.ctrl-disabled-note { margin-bottom: 12px; }
 
 .file-drop {
   border: 2px dashed #444;

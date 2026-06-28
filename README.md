@@ -53,7 +53,7 @@ That single command starts **both** the Node server (`:49787`) and the Vite dev 
 2. Set **page** size in inches.
 3. Load an SVG (drop or browse). Adjust width/height (aspect locked by default) and drag the dashed outline on the page to position. Per-layer labels and an **Optimization** preview (strokes, merged, reversed, travel saved) help you check the plan first.
 4. Use **Orientation** toggles (flip X, flip Y, swap X/Y) if your plot comes out mirrored or rotated.
-5. Use **Pen up / Pen down** to test the servo, **Motors off** to release the steppers, **Home** to return to 0,0.
+5. Use **Motors off** to release the steppers, **Go to origin** to return to 0,0.
 6. Position your paper so the pen starts at the top-left corner of the page, then **Set origin** so the plotter treats the current position as (0,0).
 7. Click **Plot**. Watch the progress bar; you can **Pause / Resume** between strokes or **Cancel** any time.
 

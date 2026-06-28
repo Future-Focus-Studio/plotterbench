@@ -71,8 +71,3 @@ export const SvgFieldSchema = z
 export const ConnectSchema = z.object({
   path: z.string().min(1, "missing path"),
 });
-
-/** Body for POST /api/pen (the `options` field is validated separately). */
-export const PenSchema = z.object({
-  state: z.enum(["up", "down"]),
-});

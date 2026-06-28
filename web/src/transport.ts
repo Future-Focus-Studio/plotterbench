@@ -18,7 +18,6 @@ export interface PlotterApi {
   ports(): Promise<{ ports: PortInfo[]; connected: boolean }>;
   connect(path: string): Promise<{ connected: boolean; version: string; driverId?: string; driverName?: string }>;
   disconnect(): Promise<{ connected: false }>;
-  pen(state: "up" | "down"): Promise<{ ok: true }>;
   motors(enable: boolean): Promise<{ ok: true }>;
   home(): Promise<{ ok: true }>;
   setOrigin(): Promise<{ ok: true }>;
@@ -68,7 +67,6 @@ export function createHttpTransport(): Transport {
     ports: () => req("/api/ports"),
     connect: (path) => req("/api/connect", { method: "POST", body: JSON.stringify({ path }) }),
     disconnect: () => req("/api/disconnect", { method: "POST" }),
-    pen: (state) => req("/api/pen", { method: "POST", body: JSON.stringify({ state }) }),
     motors: (enable) => req("/api/motors", { method: "POST", body: JSON.stringify({ enable }) }),
     home: () => req("/api/home", { method: "POST" }),
     setOrigin: () => req("/api/set-origin", { method: "POST" }),

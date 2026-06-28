@@ -15,7 +15,6 @@ import { planPolylines, Plotter, PlotProgress } from "./plotter.js";
 import {
   ConnectSchema,
   parsePlotOptions,
-  PenSchema,
   PlotOptionsBodySchema,
   SvgFieldSchema,
 } from "../../shared/schema.js";
@@ -196,20 +195,6 @@ app.post("/api/disconnect", async (_req, res) => {
     autoConnectPaused = true;
     broadcast({ type: "connection", connected: false });
     res.json({ connected: false });
-  } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
-  }
-});
-
-app.post("/api/pen", async (req, res) => {
-  const body = parseOrReject(res, PenSchema, req.body);
-  if (!body) return;
-  const opts = parseOrReject(res, PlotOptionsBodySchema, (req.body as { options?: unknown }).options);
-  if (!opts) return;
-  try {
-    if (body.state === "down") await plotter.penDown(opts);
-    else await plotter.penUp(opts);
-    res.json({ ok: true, state: body.state });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

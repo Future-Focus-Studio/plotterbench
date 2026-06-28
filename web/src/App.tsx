@@ -1234,11 +1234,11 @@ export default function App() {
                 <input id="cb-previewthin" className="field-checkbox" type="checkbox"
                   checked={previewThinLines} onChange={(e) => setPreviewThinLines(e.target.checked)} />
               </div>
-              <div className="field-grid-cell label">Width (mm)</div>
+              <div className="field-grid-cell label">SVG width (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.1" live value={widthMm} onCommit={setWidthLocked} disabled={plotActive} />
               </div>
-              <div className="field-grid-cell label">Height (mm)</div>
+              <div className="field-grid-cell label">SVG height (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.1" live value={heightMm} onCommit={setHeightLocked} disabled={plotActive} />
               </div>
@@ -1247,11 +1247,11 @@ export default function App() {
                 <input id="cb-lockcenter" className="field-checkbox" type="checkbox"
                   checked={lockCenter} onChange={(e) => setLockCenter(e.target.checked)} disabled={plotActive} />
               </div>
-              <div className="field-grid-cell label">Offset X (mm)</div>
+              <div className="field-grid-cell label">SVG offset X (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetX} onCommit={setOffsetX} disabled={lockCenter || plotActive} />
               </div>
-              <div className="field-grid-cell label">Offset Y (mm)</div>
+              <div className="field-grid-cell label">SVG offset Y (mm)</div>
               <div className="field-grid-cell">
                 <NumberInput className="field-input" step="0.5" decimals={1} value={offsetY} onCommit={setOffsetY} disabled={lockCenter || plotActive} />
               </div>

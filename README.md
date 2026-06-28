@@ -17,7 +17,8 @@ every row.
 |---------|----------|----------|--------|-------------|--------|
 | UUNA TEK iDraw H A1 | DrawCore (Grbl-derived) | — | ⚠️ In progress | — | Don / studio |
 | AxiDraw MiniKit 2 | EBB (v2-series) | 2.8.1 | 🟢 Works (basic) | 2026-06-08 | Don / studio |
-| AxiDraw V3 / SE/A3 / V3-A3 | EBB (v2-series) | — | ⚠️ Inferred | — | — |
+| AxiDraw SE/A3 | EBB (v2-series) | — | 🟢 Works (basic) | 2026-06-28 | CADRE Lab, SJSU |
+| AxiDraw V3 / V3-A3 | EBB (v2-series) | — | ⚠️ Inferred | — | — |
 | LY Drawbot (and generic vanilla Grbl) | Grbl | — | ⚠️ Inferred | — | — |
 | NextDraw | EBB v3 (class-based) | ≥ 3.0.2 | ❌ Not yet supported | — | — |
 

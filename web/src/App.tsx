@@ -1412,40 +1412,28 @@ export default function App() {
           <div className="status warn ctrl-disabled-note">Disabled: No Plotter Connected</div>
         )}
         <div className="ctrl-row">
-          <button
-            className="secondary"
-            onClick={async () => {
-              try { await api.setOrigin(); setStatus({ msg: "Origin set at current position", kind: "ok" }); }
-              catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); }
-            }}
-            disabled={!conn.connected || plotActive}
-          >
-            Set origin here
-          </button>
           <button className="secondary" onClick={home} disabled={!conn.connected || plotActive}>Go to origin</button>
-        </div>
-        <div className="ctrl-row">
-          <div className="ctrl-plot">
-            {!plotting && !paused ? (
-              <button
-                onClick={() => { setOriginConfirmed(false); setOriginConfirmOpen(true); }}
-                disabled={!conn.connected || !displayParsed}
-              >
-                Plot
-              </button>
-            ) : paused ? (
-              <>
-                <button onClick={resume}>Resume</button>
-                <button className="danger" onClick={cancel}>Cancel</button>
-              </>
-            ) : (
-              <>
-                <button className="secondary" onClick={pause}>Pause</button>
-                <button className="danger" onClick={cancel}>Cancel</button>
-              </>
-            )}
-          </div>
           <button className="secondary" onClick={motorsOff} disabled={!conn.connected || plotActive}>Motors off</button>
+        </div>
+        <div className="ctrl-plot">
+          {!plotting && !paused ? (
+            <button
+              onClick={() => { setOriginConfirmed(false); setOriginConfirmOpen(true); }}
+              disabled={!conn.connected || !displayParsed}
+            >
+              Plot
+            </button>
+          ) : paused ? (
+            <>
+              <button onClick={resume}>Resume</button>
+              <button className="danger" onClick={cancel}>Cancel</button>
+            </>
+          ) : (
+            <>
+              <button className="secondary" onClick={pause}>Pause</button>
+              <button className="danger" onClick={cancel}>Cancel</button>
+            </>
+          )}
         </div>
 
         <Modal

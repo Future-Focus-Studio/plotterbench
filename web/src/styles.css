@@ -350,7 +350,19 @@ button + button { margin-left: 6px; }
 .tree-color-swatch.is-active { border-color: #888; }
 .tree-color-swatch:hover { border-color: #eee; }
 
-.page-wrap { background: transparent; padding: 0; }
+.page-wrap { background: transparent; padding: 0; position: relative; }
+.page-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  color: #bbb;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
 .page-svg { background: white; display: block; box-shadow: 0 2px 18px rgba(0,0,0,0.5); }
 .page-svg .content-group { cursor: grab; }
 .page-svg .content-group.dragging { cursor: grabbing; }

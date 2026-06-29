@@ -402,6 +402,11 @@ export default function PageCanvas({
             </>
           )}
         </svg>
+        {!svg && (
+          <div className="page-placeholder">
+            Drop an SVG here or pick a calibration pattern
+          </div>
+        )}
       </div>
     </div>
   );

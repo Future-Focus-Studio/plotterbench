@@ -1273,7 +1273,7 @@ export default function App() {
         </div>
 
         {displayParsed && (
-          <div className={`section${testPatternOn ? " dimmed" : ""}`}>
+          <div className="section">
             <h2>Path modifications</h2>
             <div className="field-grid">
               <label className="field-grid-cell label" htmlFor="cb-reverse">Reverse (plot end → start)</label>

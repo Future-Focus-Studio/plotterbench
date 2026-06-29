@@ -948,6 +948,8 @@ export default function App() {
     }
   };
 
+  const penUp = async () => { try { await api.pen("up", plotOptions); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
+  const penDown = async () => { try { await api.pen("down", plotOptions); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
   const home = async () => { try { await api.home(); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
   const motorsOff = async () => { try { await api.motors(false); } catch (e) { setStatus({ msg: (e as Error).message, kind: "error" }); } };
 
@@ -1420,6 +1422,10 @@ export default function App() {
         <div className="ctrl-row">
           <button className="secondary" onClick={home} disabled={!conn.connected || plotActive}>Go to origin</button>
           <button className="secondary" onClick={motorsOff} disabled={!conn.connected || plotActive}>Motors off</button>
+        </div>
+        <div className="ctrl-row">
+          <button className="secondary" onClick={penUp} disabled={!conn.connected || plotActive}>Pen up</button>
+          <button className="secondary" onClick={penDown} disabled={!conn.connected || plotActive}>Pen down</button>
         </div>
         <div className="ctrl-plot">
           {!plotting && !paused ? (

@@ -2,34 +2,7 @@
 
 **Website:** [plotterbench.com](https://plotterbench.com)
 
-A local web interface for plotting SVGs on a pen plotter. Drop an SVG, set page size, drag to position, and hit Plot. The browser talks to a small Node server over HTTP + WebSocket; the server drives the plotter directly over USB serial. Two plotter families are supported out of the box and auto-detected by USB VID/PID.
-
-## Compatibility
-
-Every supported protocol is exercised on every commit by a headless capture
-harness (protocol golden files + SVG-pipeline re-render — no hardware needed), and
-each physical machine is run through the [diagnostic test-card suite](docs/qa/README.md)
-and logged under [`docs/qa/results/`](docs/qa/results/). The status below reflects
-**hardware** results; protocol-correctness and fidelity are software-verified for
-every row.
-
-| Machine | Protocol | Firmware | Status | Last tested | Tester |
-|---------|----------|----------|--------|-------------|--------|
-| UUNA TEK iDraw H A1 | DrawCore (Grbl-derived) | — | ⚠️ In progress | — | Don / studio |
-| AxiDraw MiniKit 2 | EBB (v2-series) | 2.8.1 | 🟢 Works (basic) | 2026-06-08 | Don / studio |
-| AxiDraw SE/A3 | EBB (v2-series) | — | 🟢 Works (basic) | 2026-06-28 | CADRE Lab, SJSU |
-| AxiDraw V3 / V3-A3 | EBB (v2-series) | — | ⚠️ Inferred | — | — |
-| LY Drawbot (and generic vanilla Grbl) | Grbl | — | ⚠️ Inferred | — | — |
-| NextDraw | EBB v3 (class-based) | ≥ 3.0.2 | ❌ Not yet supported | — | — |
-
-**Status legend** — ✅ **Verified**: full card suite passed on real hardware ·
-🟢 **Works (basic)**: plots correctly, advanced/edge cases pending · ⚠️
-**Untested / inferred**: expected to work by protocol, not yet confirmed on this
-hardware · ❌ **Not supported**: different protocol, out of current scope.
-
-> Rows graduate to ✅ once a full card-suite result log is filed for that machine.
-> Adding a machine: follow [RELEASE.md](RELEASE.md) → *Layer B* and drop the result
-> into `docs/qa/results/`.
+A local web interface for plotting SVGs on a pen plotter. Drop an SVG, set page size, drag to position, and hit Plot. The browser talks to a small Node server over HTTP + WebSocket; the server drives the plotter directly over USB serial. Two plotter families are supported out of the box and auto-detected by USB VID/PID: **DrawCore** (UUNA TEK / iDraw) and the **AxiDraw / EiBotBoard** family.
 
 ## Prerequisites
 

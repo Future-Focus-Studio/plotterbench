@@ -67,10 +67,7 @@ virtual device, then checks the emitted command stream against committed
 **protocol golden files** and **re-renders** it back to the input geometry. If you
 change a driver emitter, a golden will diff — that's expected; review it, and if
 the change is intentional re-record with `npm run test:bless` and commit the
-updated goldens **in the same PR**. The full release procedure (and the
-per-machine hardware QA that feeds the compatibility matrix) is in
-[RELEASE.md](RELEASE.md); the QA philosophy is in
-[docs/qa/README.md](docs/qa/README.md).
+updated goldens **in the same PR**.
 
 ## Reporting bugs
 

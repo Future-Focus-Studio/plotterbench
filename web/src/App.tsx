@@ -669,7 +669,13 @@ export default function App() {
           driverId: ev.driverId ?? prev.driverId,
           driverName: ev.driverName ?? prev.driverName,
         }));
-        if (ev.connected && ev.path) setSelectedPort(ev.path);
+        if (ev.connected && ev.path) {
+          setSelectedPort(ev.path);
+          // The ports list is only fetched at startup, so a device that was
+          // plugged in afterwards (and auto-reconnected by the server) won't be
+          // in the dropdown yet. Refresh so the now-selected port is listed.
+          api.ports().then((r) => setPorts(r.ports)).catch(() => {});
+        }
       } else if (ev.type === "notice") {
         // Server notices are all connection/origin-on-connect feedback.
         setConnStatus({ msg: ev.message, kind: ev.level === "warn" ? "warn" : "ok" });
